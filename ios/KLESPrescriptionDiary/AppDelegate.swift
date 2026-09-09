@@ -2,6 +2,11 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+// react_native_orientation_locker: the module name CocoaPods generates for the
+// "react-native-orientation-locker" pod under this project's `use_frameworks!`
+// setup. If `pod install` reports a different generated name, update this
+// import (and the `Orientation` reference below) to match it.
+import react_native_orientation_locker
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -30,6 +35,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     )
 
     return true
+  }
+
+  // Lets react-native-orientation-locker's lockToLandscape()/lockToPortrait()
+  // actually rotate the app on iPhone (UISupportedInterfaceOrientations alone
+  // only sets the allowed set, not which one is active).
+  func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+    return Orientation.getOrientation()
   }
 }
 

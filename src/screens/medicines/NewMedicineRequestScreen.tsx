@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, Button, TextField, LoadingOverlay, EmptyState } from '../../components';
+import { Screen, AppHeader, Button, Card, LoadingOverlay, EmptyState } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getAllMedicineList, getFavMedicineList } from '../../api/services/medicines';
 import type { RootScreenProps } from '../../navigation/types';
@@ -10,15 +10,23 @@ import type { GenMedicineListModel } from '../../types/models';
 type ListMode = 'all' | 'fav';
 
 export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<'NewMedicineRequest'>) {
-  const { patient } = route.params;
+  const { patient, preselected } = route.params;
   const [mode, setMode] = useState<ListMode>('all');
   const [allMeds, setAllMeds] = useState<GenMedicineListModel[]>([]);
   const [favMeds, setFavMeds] = useState<GenMedicineListModel[]>([]);
   const [loadedAll, setLoadedAll] = useState(false);
   const [loadedFav, setLoadedFav] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<Map<string, GenMedicineListModel>>(new Map());
+  // Matches AllMedicineRequestPage.xaml's 3-column search panel (Generic / Item Cd /
+  // Item Name) — present in the shipped layout but wired up as three independent filters.
+  const [genericQuery, setGenericQuery] = useState('');
+  const [itemCdQuery, setItemCdQuery] = useState('');
+  const [itemNameQuery, setItemNameQuery] = useState('');
+  // The "cart" — items chosen so far. Pre-seeded from `preselected` when returning
+  // here via "Add New" on the Confirm/Save screen, so nothing already picked is lost.
+  const [selected, setSelected] = useState<Map<string, GenMedicineListModel>>(
+    () => new Map((preselected ?? []).map(m => [m.item_cd, m])),
+  );
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -53,12 +61,17 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
 
   const source = mode === 'all' ? allMeds : favMeds;
   const filtered = useMemo(() => {
-    if (!query.trim()) return source;
-    const q = query.trim().toLowerCase();
+    const generic = genericQuery.trim().toLowerCase();
+    const itemCd = itemCdQuery.trim().toLowerCase();
+    const itemName = itemNameQuery.trim().toLowerCase();
+    if (!generic && !itemCd && !itemName) return source;
     return source.filter(
-      m => m.item_desc?.toLowerCase().includes(q) || m.gen_nm?.toLowerCase().includes(q),
+      m =>
+        (!generic || m.gen_nm?.toLowerCase().includes(generic)) &&
+        (!itemCd || m.item_cd?.toLowerCase().includes(itemCd)) &&
+        (!itemName || m.item_desc?.toLowerCase().includes(itemName)),
     );
-  }, [source, query]);
+  }, [source, genericQuery, itemCdQuery, itemNameQuery]);
 
   function toggle(item: GenMedicineListModel) {
     setSelected(prev => {
@@ -69,9 +82,16 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
     });
   }
 
-  function handleNext() {
+  const hasQuery = !!(genericQuery || itemCdQuery || itemNameQuery);
+  function clearSearch() {
+    setGenericQuery('');
+    setItemCdQuery('');
+    setItemNameQuery('');
+  }
+
+  function viewCart() {
     if (selected.size === 0) {
-      Alert.alert('New Medicine Request', 'Select at least one medicine');
+      Alert.alert('New Medicine Request', 'Add at least one medicine to the cart');
       return;
     }
     navigation.navigate('ConfirmMedRequest', { patient, selected: Array.from(selected.values()) });
@@ -79,7 +99,18 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
 
   return (
     <Screen>
-      <AppHeader title="New Medicine Request" subtitle={patient.PATIENT_NAME} onBack={() => navigation.goBack()} />
+      <AppHeader
+        title="New Medicine Request"
+        subtitle={patient.PATIENT_NAME}
+        onBack={() => navigation.goBack()}
+        right={
+          // Matches NewMedicineRequestPage.xaml's ToolbarItem (Text="RMO",
+          // Clicked="Handle_Clicked" -> RMOPage(0), generic, not patient-scoped).
+          <TouchableOpacity onPress={() => navigation.navigate('RMO', { docCd: 0 })} style={styles.headerBtn}>
+            <Icon name="doctor" size={22} color={colors.textOnPrimary} />
+          </TouchableOpacity>
+        }
+      />
 
       <View style={styles.toggleRow}>
         <TouchableOpacity
@@ -96,13 +127,42 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchWrap}>
-        <TextField
-          placeholder="Search medicine"
-          value={query}
-          onChangeText={setQuery}
-          style={styles.searchInput}
-        />
+      <Card style={styles.searchCard}>
+        <View style={styles.searchHeader}>
+          <Icon name="magnify" size={16} color={colors.primary} />
+          <Text style={styles.searchHeaderText}>Search Medicines</Text>
+          {hasQuery ? (
+            <TouchableOpacity onPress={clearSearch} hitSlop={8} style={styles.clearAllBtn}>
+              <Text style={styles.clearAllText}>Clear</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+        <View style={styles.searchRow}>
+          <SearchField
+            icon="flask-outline"
+            placeholder="Generic"
+            value={genericQuery}
+            onChangeText={setGenericQuery}
+          />
+          <SearchField
+            icon="barcode-scan"
+            placeholder="Item Cd"
+            value={itemCdQuery}
+            onChangeText={setItemCdQuery}
+          />
+          <SearchField
+            icon="text-box-search-outline"
+            placeholder="Item Name"
+            value={itemNameQuery}
+            onChangeText={setItemNameQuery}
+          />
+        </View>
+      </Card>
+
+      <View style={styles.tableHeader}>
+        <Text style={[styles.tableHeaderLabel, styles.colGeneric]}>Generic Name</Text>
+        <Text style={[styles.tableHeaderLabel, styles.colItemCd]}>Item Cd</Text>
+        <Text style={[styles.tableHeaderLabel, styles.colItemName]}>Item Name</Text>
       </View>
 
       <FlatList
@@ -121,36 +181,73 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
         renderItem={({ item }) => {
           const checked = selected.has(item.item_cd);
           return (
-            <TouchableOpacity style={styles.row} onPress={() => toggle(item)}>
+            <TouchableOpacity
+              style={[styles.row, checked && styles.rowChecked]}
+              onPress={() => toggle(item)}>
               <Icon
                 name={checked ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                size={22}
+                size={20}
                 color={checked ? colors.primary : colors.textMuted}
               />
-              <View style={styles.rowInfo}>
-                <Text style={styles.rowLabel} numberOfLines={2}>
-                  {item.item_desc}
-                </Text>
-                {item.gen_nm ? (
-                  <Text style={styles.rowSub} numberOfLines={1}>
-                    {item.gen_nm}
-                  </Text>
-                ) : null}
-              </View>
+              <Text style={[styles.rowCell, styles.colGeneric]} numberOfLines={2}>
+                {item.gen_nm}
+              </Text>
+              <Text style={[styles.rowCell, styles.colItemCd]} numberOfLines={1}>
+                {item.item_cd}
+              </Text>
+              <Text style={[styles.rowCell, styles.colItemName]} numberOfLines={2}>
+                {item.item_desc}
+              </Text>
             </TouchableOpacity>
           );
         }}
       />
 
       <View style={styles.footer}>
-        <Button label={`Next (${selected.size} selected)`} onPress={handleNext} fullWidth />
+        <Button
+          label={selected.size === 0 ? 'Add to Cart' : `View Cart (${selected.size})`}
+          onPress={viewCart}
+          disabled={selected.size === 0}
+          fullWidth
+        />
       </View>
       <LoadingOverlay visible={loading} label="Loading medicines…" />
     </Screen>
   );
 }
 
+interface SearchFieldProps {
+  icon: string;
+  placeholder: string;
+  value: string;
+  onChangeText: (text: string) => void;
+}
+
+/** A single icon-prefixed search column, with its own inline clear (×) button
+ * that only shows once it has text — a quick way to confirm each field is
+ * actually live/working, not just decorative. */
+function SearchField({ icon, placeholder, value, onChangeText }: SearchFieldProps) {
+  return (
+    <View style={styles.searchCol}>
+      <Icon name={icon} size={15} color={colors.textMuted} style={styles.searchColIcon} />
+      <TextInput
+        placeholder={placeholder}
+        placeholderTextColor={colors.textMuted}
+        value={value}
+        onChangeText={onChangeText}
+        style={styles.searchColInput}
+      />
+      {value ? (
+        <TouchableOpacity onPress={() => onChangeText('')} hitSlop={8} style={styles.searchColClear}>
+          <Icon name="close-circle" size={15} color={colors.textMuted} />
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  headerBtn: { padding: spacing.xs },
   toggleRow: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -172,21 +269,63 @@ const styles = StyleSheet.create({
   toggleBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   toggleLabel: { ...typography.bodyStrong, color: colors.textSecondary },
   toggleLabelActive: { color: colors.textOnPrimary },
-  searchWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  searchInput: { marginBottom: 0 },
-  list: { padding: spacing.lg, paddingTop: spacing.sm },
+  searchCard: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    padding: spacing.md,
+  },
+  searchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  searchHeaderText: { ...typography.captionStrong, color: colors.textSecondary, flex: 1 },
+  clearAllBtn: { padding: spacing.xs },
+  clearAllText: { ...typography.captionStrong, color: colors.accent },
+  searchRow: { flexDirection: 'row', gap: spacing.sm },
+  searchCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceAlt,
+    paddingHorizontal: spacing.sm,
+  },
+  searchColIcon: { marginRight: 4 },
+  searchColInput: {
+    ...typography.caption,
+    color: colors.textPrimary,
+    flex: 1,
+    paddingVertical: spacing.sm,
+  },
+  searchColClear: { paddingLeft: 4 },
+  tableHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  tableHeaderLabel: { ...typography.captionStrong, color: colors.textOnPrimary },
+  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     gap: spacing.sm,
   },
-  rowInfo: { flex: 1 },
-  rowLabel: { ...typography.body, color: colors.textPrimary },
-  rowSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
+  rowChecked: { backgroundColor: colors.primaryLight },
+  rowCell: { ...typography.caption, color: colors.textPrimary },
+  colGeneric: { flex: 1 },
+  colItemCd: { width: 64 },
+  colItemName: { flex: 1.6 },
   footer: {
     padding: spacing.lg,
     borderTopWidth: 1,

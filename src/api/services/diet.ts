@@ -12,7 +12,8 @@ import type {
 } from '../../types/models';
 
 function ptnUrl(method: string, reqJson: string): string {
-  return buildUrl(COMMON_URL, PRESCRIPTION_SERVICE, method, PTN_PARAM, reqJson);
+  // See src/api/services/auth.ts's userUrl for why this must be encoded.
+  return buildUrl(COMMON_URL, PRESCRIPTION_SERVICE, method, PTN_PARAM, encodeURIComponent(reqJson));
 }
 
 /**

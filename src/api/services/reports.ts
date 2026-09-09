@@ -28,12 +28,14 @@ export async function resolveReportPath(oldPath: string): Promise<string> {
     IPNO: '0',
     oldPATH: oldPath.replace(/\\/g, '\\\\'),
   };
+  // fetch() does not auto-escape the JSON blob the way .NET's Uri class does —
+  // see src/api/services/auth.ts's userUrl for the full explanation.
   const url = buildUrl(
     COMMON_URL,
     PRESCRIPTION_SERVICE,
     METHODS.getFilePath,
     PTN_PARAM,
-    JSON.stringify(req),
+    encodeURIComponent(JSON.stringify(req)),
   );
   return getJson<string>(url);
 }

@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Screen, AppHeader, Button, LoadingOverlay, EmptyState } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getWardList } from '../../api/services/patients';
+import { setMode } from '../../storage/session';
 import type { RootScreenProps } from '../../navigation/types';
 import type { WardModel } from '../../types/models';
 
@@ -50,9 +51,30 @@ export function WardListScreen({ navigation }: RootScreenProps<'WardList'>) {
     navigation.navigate('PatientList', { wardCd: wardString });
   }
 
+  async function openOpFlow() {
+    await setMode('op');
+    navigation.navigate('OPPatientList');
+  }
+
+  function openSwitchMenu() {
+    Alert.alert('Switch section', undefined, [
+      { text: 'OP Patients', onPress: openOpFlow },
+      { text: 'RMO', onPress: () => navigation.navigate('RMO', undefined) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
   return (
     <Screen>
-      <AppHeader title="Select Ward" onBack={() => navigation.goBack()} />
+      <AppHeader
+        title="Select Ward"
+        onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+        right={
+          <TouchableOpacity onPress={openSwitchMenu} hitSlop={8} style={styles.menuBtn}>
+            <Icon name="dots-vertical" size={22} color={colors.textOnPrimary} />
+          </TouchableOpacity>
+        }
+      />
       <TouchableOpacity style={styles.selectAllRow} onPress={toggleAll} disabled={wards.length === 0}>
         <Icon
           name={selected.size === wards.length && wards.length > 0 ? 'checkbox-marked' : 'checkbox-blank-outline'}
@@ -91,6 +113,7 @@ export function WardListScreen({ navigation }: RootScreenProps<'WardList'>) {
 }
 
 const styles = StyleSheet.create({
+  menuBtn: { padding: spacing.xs },
   selectAllRow: {
     flexDirection: 'row',
     alignItems: 'center',

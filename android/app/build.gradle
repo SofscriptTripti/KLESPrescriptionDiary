@@ -89,6 +89,12 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    externalNativeBuild {
+        cmake {
+            buildStagingDirectory file("C:/tmp/cxx")
+        }
+    }
+
     // `namespace` must match the Kotlin source's actual package declaration
     // (android/app/src/main/java/com/klesprescriptiondiary/*.kt) — it's used to
     // resolve the manifest's relative ".MainActivity" and to generate R/BuildConfig,

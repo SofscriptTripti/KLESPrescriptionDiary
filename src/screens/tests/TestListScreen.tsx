@@ -5,6 +5,7 @@ import { Screen, AppHeader, LoadingOverlay, EmptyState, Card } from '../../compo
 import { colors, radius, spacing, typography } from '../../theme';
 import { getTestList } from '../../api/services/tests';
 import { getMode } from '../../storage/session';
+import { useLandscapeOnFocus } from '../../utils/orientation';
 import type { RootScreenProps } from '../../navigation/types';
 import type { TestsModel, TestStatus } from '../../types/models';
 
@@ -52,6 +53,7 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
   const [tests, setTests] = useState<TestsModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  useLandscapeOnFocus();
 
   const load = useCallback(async (isRefresh = false) => {
     isRefresh ? setRefreshing(true) : setLoading(true);
@@ -82,17 +84,9 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
         subtitle={patient.PATIENT_NAME}
         onBack={() => navigation.goBack()}
         right={
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerBtn} onPress={() => load()} hitSlop={8}>
-              <Icon name="refresh" size={22} color={colors.textOnPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerBtn}
-              onPress={() => navigation.navigate('NewTestRequest', { patient })}
-              hitSlop={8}>
-              <Icon name="plus" size={24} color={colors.textOnPrimary} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => load()} hitSlop={8}>
+            <Icon name="refresh" size={22} color={colors.textOnPrimary} />
+          </TouchableOpacity>
         }
       />
 
@@ -112,7 +106,15 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
         }
         renderItem={({ item }) => {
           const meta = statusMeta(item.TESTSTATUS);
+          // Mirrors TestListScreen.xaml.cs's Handle_ItemTapped gating: rejected
+          // (3) and pending (1) rows never open a details screen, and a
+          // LABRPTTYP of "L"/"M" routes to the microbiology result screen
+          // instead of the usual component/value grid.
           function handlePress() {
+            if (item.TESTSTATUS === 3) {
+              Alert.alert('Tests', 'No Data Found');
+              return;
+            }
             if (isReportTest(item)) {
               if (item.TESTSTATUS === 1) {
                 Alert.alert('Tests', 'No Data Found');
@@ -124,11 +126,15 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
               });
               return;
             }
-            navigation.navigate('TestDetails', {
-              patient,
-              labNo: item.LABNO,
-              testName: item.TESTNAME,
-            });
+            if (item.LABRPTTYP === 'L' || item.LABRPTTYP === 'M') {
+              navigation.navigate('TestMicroResults', { test: item });
+              return;
+            }
+            if (item.TESTSTATUS === 1) {
+              Alert.alert('Tests', 'No Data Found');
+              return;
+            }
+            navigation.navigate('TestDetails', { patient, test: item });
           }
           return (
             <TouchableOpacity activeOpacity={0.8} onPress={handlePress}>
@@ -145,23 +151,52 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
                       Lab No: {item.LABNO} · {formatDate(item.TESTORDDATE)}
                     </Text>
                   </View>
-                  <View style={[styles.badge, { backgroundColor: meta.bg }]}>
-                    <Text style={[styles.badgeLabel, { color: meta.color }]}>{meta.label}</Text>
-                  </View>
+                  {/* "Authorised" (status 5) badge removed per instruction — every
+                      other status still shows its badge normally. */}
+                  {item.TESTSTATUS !== 5 ? (
+                    <View style={[styles.badge, { backgroundColor: meta.bg }]}>
+                      <Text style={[styles.badgeLabel, { color: meta.color }]}>{meta.label}</Text>
+                    </View>
+                  ) : null}
                 </View>
               </Card>
             </TouchableOpacity>
           );
         }}
       />
+
+      {/* Floating action button — matches NewTestRequestPage's destination,
+          moved here from the header per instruction. */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('NewTestRequest', { patient })}>
+        <Icon name="plus" size={28} color={colors.textOnPrimary} />
+      </TouchableOpacity>
+
       <LoadingOverlay visible={loading} label="Loading tests…" />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerBtn: { padding: spacing.xs },
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   card: { marginBottom: spacing.md },

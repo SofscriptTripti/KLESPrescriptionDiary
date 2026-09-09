@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { Screen, AppHeader, Button, TextField, LoadingOverlay } from '../../components';
+import { Screen, AppHeader, Button, Card, TextField, LoadingOverlay } from '../../components';
 import { spacing } from '../../theme';
 import { getDeviceId } from '../../utils/deviceId';
 import { updateUserPin } from '../../api/services/auth';
@@ -59,14 +59,15 @@ export function ChangePinScreen({ navigation }: RootScreenProps<'ChangePin'>) {
       });
 
       if (ok) {
-        Alert.alert('Change Pin', 'Pin changed successfully', [
+        Alert.alert('API Response', 'UpdUserPinCd returned true: PIN changed successfully', [
           { text: 'OK', onPress: () => navigation.goBack() },
         ]);
       } else {
-        Alert.alert('Change Pin', 'Some error occurred. Try again');
+        Alert.alert('API Response', 'UpdUserPinCd returned false: PIN change failed.');
       }
-    } catch {
-      Alert.alert('Change Pin', 'Some error occurred. Try again');
+    } catch (err) {
+      console.error('[ChangePinScreen] Change PIN error:', err);
+      Alert.alert('API Error', err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -76,31 +77,33 @@ export function ChangePinScreen({ navigation }: RootScreenProps<'ChangePin'>) {
     <Screen>
       <AppHeader title="Change PIN" onBack={() => navigation.goBack()} />
       <View style={styles.form}>
-        <TextField
-          label="Old PIN"
-          keyboardType="number-pad"
-          secureTextEntry
-          maxLength={4}
-          value={oldPin}
-          onChangeText={setOldPin}
-        />
-        <TextField
-          label="New PIN"
-          keyboardType="number-pad"
-          secureTextEntry
-          maxLength={4}
-          value={newPin}
-          onChangeText={setNewPin}
-        />
-        <TextField
-          label="Confirm new PIN"
-          keyboardType="number-pad"
-          secureTextEntry
-          maxLength={4}
-          value={confirmPin}
-          onChangeText={setConfirmPin}
-        />
-        <Button label="Update PIN" onPress={handleSubmit} loading={loading} fullWidth />
+        <Card style={styles.card}>
+          <TextField
+            label="Old PIN"
+            keyboardType="number-pad"
+            secureTextEntry
+            maxLength={4}
+            value={oldPin}
+            onChangeText={setOldPin}
+          />
+          <TextField
+            label="New PIN"
+            keyboardType="number-pad"
+            secureTextEntry
+            maxLength={4}
+            value={newPin}
+            onChangeText={setNewPin}
+          />
+          <TextField
+            label="Confirm new PIN"
+            keyboardType="number-pad"
+            secureTextEntry
+            maxLength={4}
+            value={confirmPin}
+            onChangeText={setConfirmPin}
+          />
+          <Button label="Update PIN" onPress={handleSubmit} loading={loading} fullWidth />
+        </Card>
       </View>
       <LoadingOverlay visible={loading} />
     </Screen>
@@ -109,4 +112,5 @@ export function ChangePinScreen({ navigation }: RootScreenProps<'ChangePin'>) {
 
 const styles = StyleSheet.create({
   form: { padding: spacing.lg },
+  card: { padding: spacing.xl },
 });

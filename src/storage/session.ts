@@ -23,8 +23,8 @@ export async function getUser(): Promise<User | null> {
 }
 export async function setUser(user: User): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEYS.userDetail, JSON.stringify(user));
-  await AsyncStorage.setItem(STORAGE_KEYS.userType, user.UserTyp ?? '');
-  await AsyncStorage.setItem(STORAGE_KEYS.userId, user.USERID ?? '');
+  await AsyncStorage.setItem(STORAGE_KEYS.userType, String(user.UserTyp ?? ''));
+  await AsyncStorage.setItem(STORAGE_KEYS.userId, String(user.USERID ?? ''));
 }
 
 export async function getUserType(): Promise<string> {

@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { colors } from '../theme';
 import { setAuthToken } from '../api/client';
-import { getAuthToken, getUser } from '../storage/session';
+import { getAuthToken, getUserMobileNo } from '../storage/session';
 
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { EnterPinScreen } from '../screens/auth/EnterPinScreen';
@@ -18,6 +18,7 @@ import { VitalSignsScreen } from '../screens/vitals/VitalSignsScreen';
 
 import { TestListScreen } from '../screens/tests/TestListScreen';
 import { TestDetailsScreen } from '../screens/tests/TestDetailsScreen';
+import { TestMicroResultsScreen } from '../screens/tests/TestMicroResultsScreen';
 import { NewTestRequestScreen } from '../screens/tests/NewTestRequestScreen';
 
 import { MedicineListScreen } from '../screens/medicines/MedicineListScreen';
@@ -45,9 +46,13 @@ export function RootNavigator() {
 
   useEffect(() => {
     (async () => {
-      const [token, user] = await Promise.all([getAuthToken(), getUser()]);
+      const [token, mobileNo] = await Promise.all([getAuthToken(), getUserMobileNo()]);
       if (token) setAuthToken(token);
-      setInitialRoute(token && user ? 'Home' : 'Login');
+      if (mobileNo && mobileNo.trim().length > 0) {
+        setInitialRoute('EnterPin');
+      } else {
+        setInitialRoute('Login');
+      }
     })();
   }, []);
 
@@ -75,6 +80,7 @@ export function RootNavigator() {
 
       <Stack.Screen name="TestList" component={TestListScreen} />
       <Stack.Screen name="TestDetails" component={TestDetailsScreen} />
+      <Stack.Screen name="TestMicroResults" component={TestMicroResultsScreen} />
       <Stack.Screen name="NewTestRequest" component={NewTestRequestScreen} />
 
       <Stack.Screen name="MedicineList" component={MedicineListScreen} />

@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { GenMedicineListModel, MedicineModel, PatientModel } from '../types/models';
+import type { GenMedicineListModel, MedicineModel, PatientModel, TestsModel } from '../types/models';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -21,11 +21,20 @@ export type RootStackParamList = {
   };
 
   TestList: { patient: PatientModel };
-  TestDetails: { patient: PatientModel; labNo: string; testName: string };
+  // The full tapped row (not just labNo/testName) — GetPtnTestCmpntsSql /
+  // GetOPPtnTestCmpntsSql require CHRGCD/TESTCD/CmpntCd from that row too,
+  // not just LABNO (see TestComponentReqModel.cs).
+  TestDetails: { patient: PatientModel; test: TestsModel };
+  // LABRPTTYP "L"/"M" rows route here instead of TestDetails — see TestListScreen.xaml.cs's
+  // Handle_ItemTapped and TestMicroResultsPage.xaml.cs.
+  TestMicroResults: { test: TestsModel };
   NewTestRequest: { patient: PatientModel };
 
   MedicineList: { patient: PatientModel };
-  NewMedicineRequest: { patient: PatientModel };
+  // `preselected` is the current cart, threaded back in when "Add New" (on the
+  // Confirm/Save screen) returns here to let the user add more before viewing
+  // the cart again.
+  NewMedicineRequest: { patient: PatientModel; preselected?: GenMedicineListModel[] };
   ConfirmMedRequest: { patient: PatientModel; selected: GenMedicineListModel[] };
   PendingRequest: { patient: PatientModel };
   MedicineSchedule: { patient: PatientModel; medicines: MedicineModel[] };

@@ -40,11 +40,59 @@ async function withTimeout<T>(fn: (signal: AbortSignal) => Promise<T>): Promise<
   }
 }
 
+function formatApiLog(method: 'GET' | 'POST', url: string, requestBody?: string, status?: number, responseText?: string) {
+  const endpoint = url.split('/api/')[1] || url;
+  
+  let decodedParams: any = null;
+  const paramMatch = url.match(/\?strUser=(.*)$/);
+  if (paramMatch && paramMatch[1]) {
+    try {
+      const decodedStr = decodeURIComponent(paramMatch[1]);
+      decodedParams = JSON.parse(decodedStr);
+    } catch {
+      decodedParams = paramMatch[1];
+    }
+  }
+
+  let formattedResponse = responseText;
+  if (responseText) {
+    try {
+      const parsed = JSON.parse(responseText);
+      formattedResponse = JSON.stringify(parsed, null, 2);
+    } catch {
+      formattedResponse = responseText;
+    }
+  }
+
+  console.log(`\n=================== [API ${method}] ===================`);
+  console.log(`ENDPOINT : ${endpoint.split('?')[0]}`);
+  console.log(`FULL URL : ${url}`);
+  if (decodedParams) {
+    console.log(`URL PARAMS :\n${JSON.stringify(decodedParams, null, 2)}`);
+  }
+  if (requestBody) {
+    try {
+      console.log(`REQUEST BODY :\n${JSON.stringify(JSON.parse(requestBody), null, 2)}`);
+    } catch {
+      console.log(`REQUEST BODY :\n${requestBody}`);
+    }
+  }
+  if (status !== undefined) {
+    console.log(`STATUS   : ${status}`);
+  }
+  if (formattedResponse !== undefined) {
+    console.log(`RESPONSE :\n${formattedResponse}`);
+  }
+  console.log(`====================================================\n`);
+}
+
 /** GET returning the raw response body as text (some endpoints reply with a bare `true`/`false`). */
 export async function getText(url: string): Promise<string> {
   return withTimeout(async signal => {
     const res = await fetch(url, { method: 'GET', headers: headers(), signal });
-    return res.text();
+    const text = await res.text();
+    formatApiLog('GET', url, undefined, res.status, text);
+    return text;
   });
 }
 
@@ -63,7 +111,9 @@ export async function postJsonRaw(url: string, jsonBody: string): Promise<string
       body: jsonBody,
       signal,
     });
-    return res.text();
+    const text = await res.text();
+    formatApiLog('POST', url, jsonBody, res.status, text);
+    return text;
   });
 }
 

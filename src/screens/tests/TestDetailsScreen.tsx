@@ -1,76 +1,131 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, LoadingOverlay, EmptyState, Card, Button } from '../../components';
-import { colors, radius, spacing, typography } from '../../theme';
-import { getMicroResult, getTestComponents } from '../../api/services/tests';
+import { Screen, AppHeader, LoadingOverlay, EmptyState } from '../../components';
+import { colors, spacing, typography } from '../../theme';
+import { getTestComponents } from '../../api/services/tests';
 import { getMode } from '../../storage/session';
+import { useLandscapeOnFocus } from '../../utils/orientation';
 import type { RootScreenProps } from '../../navigation/types';
 import type { TestComponentModel } from '../../types/models';
 
-function formatDate(value?: string): string {
+const NAME_COL_WIDTH = 140;
+const DATA_COL_WIDTH = 100;
+const ROW_MIN_HEIGHT = 48;
+
+function formatShortDate(value?: string): string {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${String(date.getFullYear()).slice(-2)}`;
+}
+
+interface PivotColumn {
+  ordNo: string;
+  header: string;
+}
+interface PivotRow {
+  compCd: string;
+  compName: string;
+}
+
+/**
+ * Pivots the flat component list into horizontal Component rows x Order/Date columns:
+ * Component Name is pinned on the left, while Date columns, Ref Range, and Unit
+ * scroll horizontally to the right.
+ */
+function buildPivot(components: TestComponentModel[]) {
+  const rows: PivotRow[] = [];
+  const seenComp = new Set<string>();
+  const columns: PivotColumn[] = [];
+  const seenOrd = new Set<string>();
+
+  for (const c of components) {
+    if (!seenComp.has(c.COMPCD)) {
+      seenComp.add(c.COMPCD);
+      rows.push({ compCd: c.COMPCD, compName: c.COMPNAME });
+    }
+    const ordNo = c.ORDNO ?? '';
+    if (!seenOrd.has(ordNo)) {
+      seenOrd.add(ordNo);
+      columns.push({ ordNo, header: formatShortDate(c.CREATEDT) });
+    }
+  }
+
+  function cellFor(compCd: string, ordNo: string): TestComponentModel | undefined {
+    let found: TestComponentModel | undefined;
+    for (const c of components) {
+      if (c.COMPCD === compCd && c.ORDNO === ordNo) found = c;
+    }
+    return found;
+  }
+
+  function compInfo(compCd: string): TestComponentModel | undefined {
+    let found: TestComponentModel | undefined;
+    for (const c of components) {
+      if (c.COMPCD === compCd) found = c;
+    }
+    return found;
+  }
+
+  return { rows, columns, cellFor, compInfo };
+}
+
+/** Mirrors TestComponentDbAdapter.TextColorByCompOrd: red when the value is at/beyond normal range. */
+function isAbnormal(cell?: TestComponentModel): boolean {
+  if (!cell) return false;
+  const value = Number(cell.VALUE);
+  const high = Number(cell.NRMLVALH);
+  const low = Number(cell.NRMLVALL);
+  if (Number.isNaN(value)) return false;
+  if (!Number.isNaN(high) && value >= high) return true;
+  if (!Number.isNaN(low) && value <= low) return true;
+  return false;
+}
+
+/** Mirrors TestComponentDbAdapter.GetBackColorByCompOrd: amber cell background when ISAUTH !== 'Y'. */
+function isUnauthorised(cell?: TestComponentModel): boolean {
+  if (!cell || !cell.ISAUTH) return false;
+  return cell.ISAUTH.toUpperCase() !== 'Y';
 }
 
 export function TestDetailsScreen({ navigation, route }: RootScreenProps<'TestDetails'>) {
-  const { patient, labNo, testName } = route.params;
+  const { patient, test } = route.params;
   const [components, setComponents] = useState<TestComponentModel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMicro, setLoadingMicro] = useState(false);
+  useLandscapeOnFocus();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const mode = await getMode();
-      const list = await getTestComponents(patient, mode, { labNo });
-      const sorted = [...list].sort(
-        (a, b) => new Date(b.CREATEDT).getTime() - new Date(a.CREATEDT).getTime(),
-      );
-      setComponents(sorted);
+      const list = await getTestComponents(patient, mode, {
+        labNo: test.LABNO,
+        chrgCd: test.CHRGCD,
+        testCd: test.TESTCD,
+        cmpntCd: test.cmpntcd,
+      });
+      setComponents(list);
     } catch {
       Alert.alert('Error', 'Failed to load test components');
     } finally {
       setLoading(false);
     }
-  }, [patient, labNo]);
+  }, [patient, test]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const isEmpty = useMemo(() => components.length === 0, [components]);
-  const sampleNo = useMemo(
-    () => components.find(c => c.SAMPLENO)?.SAMPLENO,
-    [components],
-  );
-
-  async function viewMicroResult() {
-    if (!sampleNo) return;
-    setLoadingMicro(true);
-    try {
-      const result = await getMicroResult(sampleNo);
-      if (!result || (result.objArrResult ?? []).length === 0) {
-        Alert.alert('Microbiology Result', 'No result found.');
-        return;
-      }
-      const lines = result.objArrResult.map(r => `${r.COMPCD ?? ''}: ${r.TESTVALUE ?? ''}`.trim());
-      const message = [result.RptNote, ...lines].filter(Boolean).join('\n');
-      Alert.alert('Microbiology Result', message || 'No result found.');
-    } catch {
-      Alert.alert('Error', 'Failed to load microbiology result');
-    } finally {
-      setLoadingMicro(false);
-    }
-  }
+  const pivot = useMemo(() => buildPivot(components), [components]);
+  const isEmpty = components.length === 0;
 
   return (
     <Screen>
       <AppHeader
-        title={testName}
-        subtitle={`Lab No: ${labNo}`}
+        title={test.TESTNAME}
+        subtitle={`Lab No: ${test.LABNO}`}
         onBack={() => navigation.goBack()}
         right={
           <TouchableOpacity style={styles.headerBtn} onPress={load} hitSlop={8}>
@@ -79,82 +134,132 @@ export function TestDetailsScreen({ navigation, route }: RootScreenProps<'TestDe
         }
       />
 
-      <FlatList
-        data={components}
-        keyExtractor={(item, index) => `${item.LABNO}-${item.COMPCD}-${index}`}
-        contentContainerStyle={[styles.list, isEmpty && styles.emptyContainer]}
-        ListHeaderComponent={
-          sampleNo ? (
-            <Button
-              label={loadingMicro ? 'Loading…' : 'View Microbiology Result'}
-              variant="outline"
-              onPress={viewMicroResult}
-              disabled={loadingMicro}
-              style={styles.microBtn}
-            />
-          ) : undefined
-        }
-        ListEmptyComponent={
-          !loading ? <EmptyState icon="clipboard-text-off-outline" title="No components found" /> : undefined
-        }
-        renderItem={({ item }) => {
-          const isAuth = ['y', 'true', '1'].includes((item.ISAUTH ?? '').toLowerCase());
-          return (
-          <Card style={styles.card}>
-            <View style={styles.rowTop}>
-              <Text style={styles.name} numberOfLines={2}>
-                {item.COMPNAME}
-              </Text>
-              {item.ISAUTH ? (
-                <View style={[styles.authBadge, { backgroundColor: isAuth ? colors.successLight : colors.warningLight }]}>
-                  <Text style={[styles.authLabel, { color: isAuth ? colors.success : colors.warning }]}>
-                    {isAuth ? 'Authorised' : 'Unauthorised'}
+      {isEmpty ? (
+        !loading ? <EmptyState icon="clipboard-text-off-outline" title="No components found" /> : null
+      ) : (
+        <ScrollView contentContainerStyle={styles.vScroll}>
+          <View style={styles.tableWrapper}>
+            {/* Fixed Left Column: Component Names */}
+            <View style={styles.fixedColumn}>
+              <View style={[styles.cell, styles.cellHeader, { width: NAME_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                <Text style={styles.cellHeaderText} numberOfLines={2}>
+                  Components
+                </Text>
+              </View>
+              {pivot.rows.map(row => (
+                <View
+                  key={row.compCd}
+                  style={[styles.cell, styles.cellBody, { width: NAME_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                  <Text style={styles.cellBodyTextBold} numberOfLines={2}>
+                    {row.compName}
                   </Text>
                 </View>
-              ) : null}
+              ))}
             </View>
-            <View style={styles.grid}>
-              <GridItem label="Value" value={item.VALUE || '—'} />
-              <GridItem label="Unit" value={item.UNIT || '—'} />
-              <GridItem label="Normal Range" value={`${item.NRMLVALL ?? '—'} - ${item.NRMLVALH ?? '—'}`} />
-            </View>
-            <Text style={styles.date}>{formatDate(item.CREATEDT)}</Text>
-          </Card>
-          );
-        }}
-      />
-      <LoadingOverlay visible={loading} label="Loading test details…" />
-    </Screen>
-  );
-}
 
-function GridItem({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.gridItem}>
-      <Text style={styles.gridLabel}>{label}</Text>
-      <Text style={styles.gridValue}>{value}</Text>
-    </View>
+            {/* Scrollable Right Columns: Dates, Ref. Range, Unit */}
+            <ScrollView horizontal showsHorizontalScrollIndicator>
+              <View>
+                {/* Header Row */}
+                <View style={styles.row}>
+                  {pivot.columns.map(col => (
+                    <View
+                      key={col.ordNo}
+                      style={[styles.cell, styles.cellHeader, { width: DATA_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                      <Text style={styles.cellHeaderText} numberOfLines={2}>
+                        {col.header}
+                      </Text>
+                    </View>
+                  ))}
+                  <View style={[styles.cell, styles.cellHeader, { width: DATA_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                    <Text style={styles.cellHeaderText} numberOfLines={2}>
+                      Ref. Range
+                    </Text>
+                  </View>
+                  <View style={[styles.cell, styles.cellHeader, { width: DATA_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                    <Text style={styles.cellHeaderText} numberOfLines={2}>
+                      Unit
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Component Rows */}
+                {pivot.rows.map(row => {
+                  const info = pivot.compInfo(row.compCd);
+                  return (
+                    <View key={row.compCd} style={styles.row}>
+                      {pivot.columns.map(col => {
+                        const cell = pivot.cellFor(row.compCd, col.ordNo);
+                        return (
+                          <View
+                            key={col.ordNo}
+                            style={[
+                              styles.cell,
+                              styles.cellBody,
+                              { width: DATA_COL_WIDTH, minHeight: ROW_MIN_HEIGHT },
+                              isUnauthorised(cell) ? styles.cellHighlight : null,
+                            ]}>
+                            <Text
+                              style={[
+                                styles.cellBodyText,
+                                isAbnormal(cell) ? styles.cellDangerText : null,
+                              ]}
+                              numberOfLines={2}>
+                              {cell?.VALUE || '—'}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                      <View
+                        style={[styles.cell, styles.cellBody, { width: DATA_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                        <Text style={styles.cellBodyText} numberOfLines={2}>
+                          {`${info?.NRMLVALL ?? '—'}-${info?.NRMLVALH ?? '—'}`}
+                        </Text>
+                      </View>
+                      <View
+                        style={[styles.cell, styles.cellBody, { width: DATA_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                        <Text style={styles.cellBodyText} numberOfLines={2}>
+                          {info?.UNIT || '—'}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        </ScrollView>
+      )}
+
+      <LoadingOverlay visible={loading} label="Loading..." />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   headerBtn: { padding: spacing.xs },
-  list: { padding: spacing.lg, paddingTop: spacing.sm },
-  emptyContainer: { flexGrow: 1, justifyContent: 'center' },
-  microBtn: { marginBottom: spacing.md },
-  card: { marginBottom: spacing.md },
-  rowTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  name: { ...typography.bodyStrong, color: colors.textPrimary, flex: 1, marginRight: spacing.sm },
-  authBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.successLight,
+  vScroll: { paddingBottom: spacing.xl },
+  tableWrapper: { flexDirection: 'row', width: '100%', paddingHorizontal: spacing.sm },
+  fixedColumn: {
+    zIndex: 1,
+    elevation: 2,
+    borderRightWidth: 1.5,
+    borderRightColor: colors.border,
   },
-  authLabel: { ...typography.captionStrong, fontSize: 11, color: colors.success },
-  grid: { flexDirection: 'row', marginTop: spacing.md, gap: spacing.md },
-  gridItem: { flex: 1 },
-  gridLabel: { ...typography.label, color: colors.textMuted },
-  gridValue: { ...typography.bodyStrong, color: colors.textPrimary, marginTop: 2 },
-  date: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.md },
+  row: { flexDirection: 'row' },
+  cell: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  cellHeader: { backgroundColor: colors.primary },
+  cellBody: { backgroundColor: colors.surface },
+  cellHighlight: { backgroundColor: colors.warningLight },
+  cellHeaderText: { ...typography.captionStrong, color: colors.textOnPrimary, textAlign: 'center' },
+  cellBodyText: { ...typography.caption, color: colors.textPrimary, textAlign: 'center' },
+  cellBodyTextBold: { ...typography.captionStrong, color: colors.textPrimary, textAlign: 'center' },
+  cellDangerText: { color: colors.danger, fontWeight: '700' },
 });

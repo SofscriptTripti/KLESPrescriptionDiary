@@ -23,7 +23,10 @@ import type {
 } from '../../types/models';
 
 function ptnUrl(method: string, reqJson: string): string {
-  return buildUrl(COMMON_URL, PRESCRIPTION_SERVICE, method, PTN_PARAM, reqJson);
+  // See auth.ts's userUrl for why this must be encoded: fetch() (unlike .NET's Uri
+  // class) does not auto-escape the raw JSON, and the backend's WCF layer rejects
+  // unescaped braces/quotes/spaces outright.
+  return buildUrl(COMMON_URL, PRESCRIPTION_SERVICE, method, PTN_PARAM, encodeURIComponent(reqJson));
 }
 
 /** Formats a Date the way Newtonsoft.Json serializes an unqualified `DateTime` (no offset). */

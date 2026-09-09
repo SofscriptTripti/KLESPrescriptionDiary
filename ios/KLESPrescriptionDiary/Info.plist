@@ -47,7 +47,15 @@
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Used to verify connection with authorized hospital network access points.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used for capturing medical notes and prescription document attachments.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used for selecting prescription documents and lab report attachments.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Contacts access is used to communicate with patients when required.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is used only when voice input features are enabled.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialCommunityIcons.ttf</string>
@@ -64,6 +72,8 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>

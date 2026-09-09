@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, TextField, LoadingOverlay, EmptyState, Card } from '../../components';
+import { Screen, AppHeader, TextField, LoadingOverlay, EmptyState, Card, GenderAvatar } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getOPPatientList } from '../../api/services/opPatients';
 import { getUser, setMode } from '../../storage/session';
@@ -95,23 +95,13 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
           <TouchableOpacity onPress={() => openPatient(item)}>
             <Card style={styles.card}>
               <View style={styles.row}>
-                <View
-                  style={[
-                    styles.avatar,
-                    { backgroundColor: item.PATIENT_GENDER === 'M' ? colors.accentLight : '#FCE7F3' },
-                  ]}>
-                  <Icon
-                    name={item.PATIENT_GENDER === 'M' ? 'gender-male' : 'gender-female'}
-                    size={22}
-                    color={item.PATIENT_GENDER === 'M' ? colors.male : colors.female}
-                  />
-                </View>
+                <GenderAvatar gender={item.PATIENT_GENDER} size={48} />
                 <View style={styles.info}>
                   <Text style={styles.name} numberOfLines={1}>
                     {item.PATIENT_NAME}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
-                    IP No: {item.PATIENT_ID} · Bed {item.PATIENT_BEDNO} · {item.PATIENT_WARDNO}
+                    IP No: {item.PATIENT_ID} · Bed {item.PATIENT_BEDNO} · {item.PATIENT_WARDNO} · Floor {item.PATIENT_FLOOR}
                   </Text>
                   {user?.UserTyp !== '1' ? (
                     <Text style={styles.meta} numberOfLines={1}>
@@ -146,15 +136,7 @@ const styles = StyleSheet.create({
   list: { padding: spacing.lg, paddingTop: spacing.sm },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   card: { marginBottom: spacing.md },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   info: { flex: 1 },
   name: { ...typography.bodyStrong, color: colors.textPrimary },
   meta: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },

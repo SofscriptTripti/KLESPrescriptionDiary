@@ -282,15 +282,16 @@ export function NotesScreen({ navigation, route }: RootScreenProps<'Notes'>) {
         };
         const ok = await addDocNote(payload);
         if (ok) {
-          Alert.alert('Success', 'Note saved');
+          Alert.alert('API Response', 'AddDocNotes returned true: Note saved successfully');
           setNoteText('');
           const historyList = await getNoteHistory(IpOpNo, patient.PRMNT_PATIENT_NO);
           setHistory(sortByCrtDtTmDesc(historyList));
         } else {
-          Alert.alert('Error', 'Note not saved');
+          Alert.alert('API Response', 'AddDocNotes returned false: Note save failed.');
         }
-      } catch {
-        Alert.alert('Error', 'Some error occurred. Try again');
+      } catch (err) {
+        console.error('[NotesScreen] Save note error:', err);
+        Alert.alert('API Error', err instanceof Error ? err.message : String(err));
       } finally {
         setSaving(false);
       }
@@ -318,15 +319,16 @@ export function NotesScreen({ navigation, route }: RootScreenProps<'Notes'>) {
       };
       const ok = await saveDocNoteTemplate(payload);
       if (ok) {
-        Alert.alert('Success', 'Template saved');
+        Alert.alert('API Response', 'SaveDocNoteTmpl returned true: Template saved successfully');
         setTemplateModalVisible(false);
         setTemplateName('');
         await loadTemplates(docCd);
       } else {
-        Alert.alert('Error', 'Template not saved');
+        Alert.alert('API Response', 'SaveDocNoteTmpl returned false: Template save failed.');
       }
-    } catch {
-      Alert.alert('Error', 'Some error occurred. Try again');
+    } catch (err) {
+      console.error('[NotesScreen] Save template error:', err);
+      Alert.alert('API Error', err instanceof Error ? err.message : String(err));
     } finally {
       setSavingTemplate(false);
     }
@@ -415,7 +417,17 @@ export function NotesScreen({ navigation, route }: RootScreenProps<'Notes'>) {
         onRequestClose={() => setTemplateModalVisible(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Save as Template</Text>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Save as Template</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setTemplateModalVisible(false);
+                  setTemplateName('');
+                }}
+                hitSlop={8}>
+                <Icon name="close" size={22} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
             <TextField placeholder="Template name" value={templateName} onChangeText={setTemplateName} />
             <View style={styles.buttonRow}>
               <Button
@@ -486,5 +498,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: spacing.xl,
   },
-  modalTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  modalTitle: { ...typography.h3, color: colors.textPrimary },
 });

@@ -13,7 +13,7 @@ export function Screen({ children, style, edges, padded, ...rest }: ScreenProps)
   return (
     <SafeAreaView
       style={[styles.safe, style]}
-      edges={edges ?? ['top', 'left', 'right']}
+      edges={edges ?? ['top', 'bottom', 'left', 'right']}
       {...rest}>
       <View style={[styles.body, padded && styles.padded]}>{children}</View>
     </SafeAreaView>

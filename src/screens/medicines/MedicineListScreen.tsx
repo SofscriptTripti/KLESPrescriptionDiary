@@ -110,26 +110,18 @@ export function MedicineListScreen({ navigation, route }: RootScreenProps<'Medic
         subtitle={patient.PATIENT_NAME}
         onBack={() => navigation.goBack()}
         right={
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.headerBtn}
-              hitSlop={8}
-              onPress={() => navigation.navigate('MedicineSchedule', { patient, medicines: orders })}>
-              <Icon name="calendar-clock-outline" size={22} color={colors.textOnPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerBtn}
-              hitSlop={8}
-              onPress={() => navigation.navigate('PendingRequest', { patient })}>
-              <Icon name="clock-outline" size={22} color={colors.textOnPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerBtn}
-              hitSlop={8}
-              onPress={() => navigation.navigate('NewMedicineRequest', { patient })}>
-              <Icon name="plus" size={24} color={colors.textOnPrimary} />
-            </TouchableOpacity>
-          </View>
+          // Matches MedicineReqPage.xaml's ToolbarItems exactly: just RMO + "+" —
+          // no calendar/schedule icon, no pending-request icon. "+" is a floating
+          // action button here instead (see below), so only RMO stays in the header.
+          <TouchableOpacity
+            style={styles.headerBtn}
+            hitSlop={8}
+            onPress={() => {
+              const docCd = Number(patient.PATIENT_DOCCD);
+              navigation.navigate('RMO', { docCd: Number.isNaN(docCd) ? 0 : docCd });
+            }}>
+            <Icon name="doctor" size={22} color={colors.textOnPrimary} />
+          </TouchableOpacity>
         }
       />
 
@@ -148,14 +140,38 @@ export function MedicineListScreen({ navigation, route }: RootScreenProps<'Medic
         </Tab.Navigator>
       </MedsListContext.Provider>
 
+      {/* Floating action button — matches the original's "+" toolbar item's
+          destination (NewMedicineRequestPage), just styled as a FAB per instruction. */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('NewMedicineRequest', { patient })}>
+        <Icon name="plus" size={28} color={colors.textOnPrimary} />
+      </TouchableOpacity>
+
       <LoadingOverlay visible={loading} label="Loading medicines…" />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerBtn: { padding: spacing.xs },
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
   list: { padding: spacing.lg, paddingTop: spacing.md },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   card: { marginBottom: spacing.md },

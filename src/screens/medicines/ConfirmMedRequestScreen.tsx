@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, Button, TextField, Card, LoadingOverlay } from '../../components';
+import { Screen, AppHeader, Button, TextField, Card, LoadingOverlay, EmptyState } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import {
   getDosageDescList,
@@ -85,6 +85,10 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
     setDrafts(prev => prev.map((d, i) => (i === index ? { ...d, ...patch } : d)));
   }
 
+  function removeDraft(index: number) {
+    setDrafts(prev => prev.filter((_, i) => i !== index));
+  }
+
   function selectOption(optionIdx: number) {
     if (!picker) return;
     if (picker.field === 'freq') updateDraft(picker.index, { freqIdx: optionIdx });
@@ -94,7 +98,10 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
   }
 
   function validate(): boolean {
-    if (drafts.length === 0) return false;
+    if (drafts.length === 0) {
+      Alert.alert('New Medicine Request', 'Add at least one medicine');
+      return false;
+    }
     for (const d of drafts) {
       const qty = Number(d.quantity);
       const days = Number(d.days);
@@ -184,49 +191,103 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
     return routeList.map(r => r.dcd);
   }, [picker, freqList, dosageList, routeList]);
 
+  const pickerTitle =
+    picker?.field === 'freq' ? 'Frequency' : picker?.field === 'dosage' ? 'Dosage' : 'Route of Admin';
+
+  function handleAddNew() {
+    // Matches ConfirmNewMedRequestPage.xaml.cs's Handle_Clicked_1 ("Add New +"),
+    // which pops back to the medicine picker — here the current cart is threaded
+    // back in as `preselected` so nothing already chosen is lost.
+    navigation.navigate('NewMedicineRequest', {
+      patient,
+      preselected: drafts.map(d => d.med),
+    });
+  }
+
+  function openRmo() {
+    const docCd = Number(patient.PATIENT_DOCCD);
+    navigation.navigate('RMO', { docCd: Number.isNaN(docCd) ? 0 : docCd });
+  }
+
   return (
     <Screen>
-      <AppHeader title="Confirm Request" subtitle={patient.PATIENT_NAME} onBack={() => navigation.goBack()} />
+      <AppHeader
+        title="Confirm Request"
+        subtitle={patient.PATIENT_NAME}
+        onBack={() => navigation.goBack()}
+        right={
+          // Matches ConfirmNewMedRequestPage.xaml's ToolbarItem (Text="RMO").
+          <TouchableOpacity onPress={openRmo} style={styles.headerBtn}>
+            <Icon name="doctor" size={22} color={colors.textOnPrimary} />
+          </TouchableOpacity>
+        }
+      />
+
+      <View style={styles.summaryBar}>
+        <Icon name="pill" size={18} color={colors.primary} />
+        <Text style={styles.summaryText}>
+          {drafts.length} {drafts.length === 1 ? 'medicine' : 'medicines'} in this request
+        </Text>
+      </View>
 
       <FlatList
         data={drafts}
         keyExtractor={(d, idx) => `${d.med.item_cd}-${idx}`}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, drafts.length === 0 && styles.emptyContainer]}
+        ListEmptyComponent={
+          !loading ? (
+            <EmptyState icon="cart-off" title="Cart is empty" subtitle="Tap Add New to choose medicines" />
+          ) : undefined
+        }
         renderItem={({ item, index }) => (
           <Card style={styles.card}>
-            <Text style={styles.itemDesc} numberOfLines={2}>
-              {item.med.item_desc}
-            </Text>
-            {item.med.gen_nm ? (
-              <Text style={styles.itemSub} numberOfLines={1}>
-                {item.med.gen_nm}
-              </Text>
-            ) : null}
+            <View style={styles.cardHeader}>
+              <View style={styles.indexBadge}>
+                <Text style={styles.indexBadgeText}>{index + 1}</Text>
+              </View>
+              <View style={styles.cardTitleWrap}>
+                <Text style={styles.itemDesc} numberOfLines={2}>
+                  {item.med.item_desc}
+                </Text>
+                {item.med.gen_nm ? (
+                  <Text style={styles.itemSub} numberOfLines={1}>
+                    {item.med.gen_nm}
+                  </Text>
+                ) : null}
+              </View>
+              <TouchableOpacity
+                onPress={() => removeDraft(index)}
+                hitSlop={8}
+                style={styles.removeBtn}>
+                <Icon name="trash-can-outline" size={20} color={colors.danger} />
+              </TouchableOpacity>
+            </View>
 
-            <View style={styles.chipRow}>
-              <TouchableOpacity style={styles.chip} onPress={() => setPicker({ index, field: 'freq' })}>
-                <Text style={styles.chipLabel} numberOfLines={1}>
-                  {freqList[item.freqIdx]?.freq_desc ?? 'Frequency'}
-                </Text>
-                <Icon name="chevron-down" size={16} color={colors.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.chip} onPress={() => setPicker({ index, field: 'dosage' })}>
-                <Text style={styles.chipLabel} numberOfLines={1}>
-                  {dosageList[item.dosageIdx]?.dcd ?? 'Dosage'}
-                </Text>
-                <Icon name="chevron-down" size={16} color={colors.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.chip} onPress={() => setPicker({ index, field: 'route' })}>
-                <Text style={styles.chipLabel} numberOfLines={1}>
-                  {routeList[item.routeIdx]?.dcd ?? 'Route'}
-                </Text>
-                <Icon name="chevron-down" size={16} color={colors.primary} />
-              </TouchableOpacity>
+            <View style={styles.divider} />
+
+            <Text style={styles.sectionLabel}>Dosage Instructions</Text>
+            <View style={styles.dropdownRow}>
+              <DropdownField
+                label="Frequency"
+                value={freqList[item.freqIdx]?.freq_desc}
+                onPress={() => setPicker({ index, field: 'freq' })}
+              />
+              <DropdownField
+                label="Dosage"
+                value={dosageList[item.dosageIdx]?.dcd}
+                onPress={() => setPicker({ index, field: 'dosage' })}
+              />
+              <DropdownField
+                label="Route of Admin"
+                value={routeList[item.routeIdx]?.dcd}
+                onPress={() => setPicker({ index, field: 'route' })}
+              />
             </View>
 
             <View style={styles.inputsRow}>
               <TextField
                 label="Quantity"
+                placeholder="0"
                 keyboardType="numeric"
                 value={item.quantity}
                 onChangeText={v => updateDraft(index, { quantity: v.replace(/[^0-9]/g, '') })}
@@ -234,6 +295,7 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
               />
               <TextField
                 label="Days"
+                placeholder="0"
                 keyboardType="numeric"
                 value={item.days}
                 onChangeText={v => updateDraft(index, { days: v.replace(/[^0-9]/g, '') })}
@@ -246,18 +308,35 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
               placeholder="Optional remarks"
               value={item.remarks}
               onChangeText={v => updateDraft(index, { remarks: v })}
+              multiline
+              style={styles.remarksInput}
             />
           </Card>
         )}
       />
 
       <View style={styles.footer}>
-        <Button label="Submit Request" onPress={handleSubmit} fullWidth loading={submitting} />
+        <View style={styles.footerRow}>
+          <Button label="Add New" variant="outline" onPress={handleAddNew} style={styles.footerBtn} />
+          <Button label="Save" onPress={handleSubmit} loading={submitting} style={styles.footerBtn} />
+          <Button
+            label="Cancel"
+            variant="danger"
+            onPress={() => navigation.goBack()}
+            style={styles.footerBtn}
+          />
+        </View>
       </View>
 
       <Modal visible={!!picker} transparent animationType="fade" onRequestClose={() => setPicker(null)}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setPicker(null)}>
           <View style={styles.modalBox}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>{pickerTitle}</Text>
+              <TouchableOpacity onPress={() => setPicker(null)} hitSlop={8}>
+                <Icon name="close" size={22} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
             <FlatList
               data={pickerOptions}
               keyExtractor={(_, i) => String(i)}
@@ -276,31 +355,86 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
   );
 }
 
+interface DropdownFieldProps {
+  label: string;
+  value?: string;
+  onPress: () => void;
+}
+
+function DropdownField({ label, value, onPress }: DropdownFieldProps) {
+  return (
+    <TouchableOpacity style={styles.dropdownField} onPress={onPress} activeOpacity={0.7}>
+      <Text style={styles.dropdownLabel}>{label}</Text>
+      <View style={styles.dropdownValueRow}>
+        <Text style={[styles.dropdownValue, !value && styles.dropdownPlaceholder]} numberOfLines={1}>
+          {value ?? 'Select'}
+        </Text>
+        <Icon name="chevron-down" size={16} color={colors.textMuted} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  list: { padding: spacing.lg, paddingTop: spacing.md },
-  card: { marginBottom: spacing.md },
-  itemDesc: { ...typography.bodyStrong, color: colors.textPrimary },
-  itemSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
-  chip: {
+  headerBtn: { padding: spacing.xs },
+  summaryBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
     backgroundColor: colors.primaryLight,
-    maxWidth: '100%',
   },
-  chipLabel: { ...typography.caption, color: colors.primaryDark, maxWidth: 140 },
-  inputsRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
-  smallInput: { marginBottom: 0 },
+  summaryText: { ...typography.captionStrong, color: colors.primaryDark },
+  list: { padding: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
+  emptyContainer: { flexGrow: 1, justifyContent: 'center' },
+  card: { marginBottom: spacing.lg },
+  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  indexBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  indexBadgeText: { ...typography.captionStrong, color: colors.textOnPrimary, fontSize: 12 },
+  cardTitleWrap: { flex: 1 },
+  itemDesc: { ...typography.bodyStrong, color: colors.textPrimary },
+  itemSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
+  removeBtn: { padding: spacing.xs },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.md },
+  sectionLabel: {
+    ...typography.label,
+    color: colors.textMuted,
+    marginBottom: spacing.sm,
+  },
+  dropdownRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  dropdownField: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.surfaceAlt,
+  },
+  dropdownLabel: { ...typography.label, color: colors.textMuted, marginBottom: 2 },
+  dropdownValueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
+  dropdownValue: { ...typography.captionStrong, color: colors.textPrimary, flexShrink: 1 },
+  dropdownPlaceholder: { color: colors.textMuted, fontFamily: typography.body.fontFamily },
+  inputsRow: { flexDirection: 'row', gap: spacing.md },
+  smallInput: { marginBottom: spacing.md },
+  remarksInput: { minHeight: 64, textAlignVertical: 'top', marginBottom: 0 },
   footer: {
     padding: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
   },
+  footerRow: { flexDirection: 'row', gap: spacing.sm },
+  footerBtn: { flex: 1, paddingHorizontal: spacing.sm },
   modalBackdrop: {
     flex: 1,
     backgroundColor: colors.overlay,
@@ -313,6 +447,16 @@ const styles = StyleSheet.create({
     maxHeight: '70%',
     paddingVertical: spacing.sm,
   },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modalTitle: { ...typography.h3, color: colors.textPrimary },
   modalOption: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,

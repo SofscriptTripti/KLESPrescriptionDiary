@@ -16,7 +16,8 @@ import type {
 } from '../../types/models';
 
 function ptnUrl(method: string, reqJson: string): string {
-  return buildUrl(COMMON_URL, PRESCRIPTION_SERVICE, method, PTN_PARAM, reqJson);
+  // See src/api/services/auth.ts's userUrl for why this must be encoded.
+  return buildUrl(COMMON_URL, PRESCRIPTION_SERVICE, method, PTN_PARAM, encodeURIComponent(reqJson));
 }
 
 /**
@@ -43,7 +44,6 @@ export async function getTestList(patient: PatientModel, mode: string): Promise<
 
 export interface GetTestComponentsParams {
   labNo: string;
-  /** Optional — see assumption note below. */
   chrgCd?: string;
   testCd?: string;
   cmpntCd?: string;
@@ -53,14 +53,9 @@ export interface GetTestComponentsParams {
  * PrescriptionDiary/GetPtnTestCmpntsSql (IP) or GetOPPtnTestCmpntsSql (OP) —
  * component/result rows for one lab order. Mirrors TestDetailsPage.xaml.cs's
  * TestComponentReqModel (IP, keyed by IPNO) / TestComponentOPReqModel (OP,
- * keyed by PtnNo).
- *
- * ASSUMPTION: the MAUI screen also sends CHRGCD/TESTCD/CmpntCd (taken from the
- * TestsModel row that was tapped), but this RN app's `TestDetails` route
- * (navigation/types.ts) only carries `labNo`/`testName`, not those extra
- * fields. They default to 0 here on the assumption the backend can resolve a
- * lab order's components from LABNO (+ patient id) alone; pass them through
- * explicitly if the caller happens to have the originating TestsModel row.
+ * keyed by PtnNo) — CHRGCD/TESTCD/CmpntCd come from the TestsModel row that
+ * was tapped (see TestListScreen.tsx's navigation call), not just LABNO;
+ * omitting them causes the backend to return an empty component list.
  */
 export async function getTestComponents(
   patient: PatientModel,
