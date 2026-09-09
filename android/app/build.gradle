@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -72,18 +73,35 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Real release-signing credentials for the already-published com.KlesPrescription
+// app live in android/keystore.properties (git-ignored, see keystore.properties.example)
+// so the actual keystore/passwords never get committed. Absent that file, release
+// builds fall back to debug signing.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+def hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    // `namespace` must match the Kotlin source's actual package declaration
+    // (android/app/src/main/java/com/klesprescriptiondiary/*.kt) — it's used to
+    // resolve the manifest's relative ".MainActivity" and to generate R/BuildConfig,
+    // and is independent of the Play Store identity. `applicationId` below is what
+    // controls store identity — that's the one that must match the MAUI app's
+    // ApplicationId so this build updates the already-published app.
     namespace "com.klesprescriptiondiary"
     defaultConfig {
-        applicationId "com.klesprescriptiondiary"
+        applicationId "com.KlesPrescription"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 6
+        versionName "3.0"
     }
     signingConfigs {
         debug {
@@ -92,15 +110,21 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        if (hasReleaseKeystore) {
+            release {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
