@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Release builds disable cleartext traffic by default (see the React Native Gradle
+  Plugin's AgpConfiguratorUtils, which sets usesCleartextTraffic=false for release).
+  The Doctor's Notes API only exists on plain HTTP (see src/api/constants.ts NOTES_URL),
+  so it needs a narrowly-scoped exception for just that host, rather than re-enabling
+  cleartext traffic app-wide.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">114.143.79.62</domain>
+    </domain-config>
+</network-security-config>

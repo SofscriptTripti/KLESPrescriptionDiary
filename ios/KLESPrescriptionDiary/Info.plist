@@ -33,9 +33,28 @@
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<!-- The Doctor's Notes API (src/api/constants.ts NOTES_URL) only exists on plain
+		     HTTP at this one IP — a narrowly-scoped exception, not an app-wide one. -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>114.143.79.62</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>MaterialCommunityIcons.ttf</string>
+		<string>Ionicons.ttf</string>
+		<string>OpenSans-Regular.ttf</string>
+		<string>OpenSans-Semibold.ttf</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

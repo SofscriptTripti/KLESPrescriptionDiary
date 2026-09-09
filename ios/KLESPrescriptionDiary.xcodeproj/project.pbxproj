@@ -257,7 +257,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = KLESPrescriptionDiary/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -265,13 +265,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.KlesPrescription;
 				PRODUCT_NAME = KLESPrescriptionDiary;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -287,25 +287,34 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				INFOPLIST_FILE = KLESPrescriptionDiary/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.KlesPrescription;
 				PRODUCT_NAME = KLESPrescriptionDiary;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				// Matches KlesPrescription.csproj's CodesignKey/CodesignProvision for the
+				// already-published app. Import the "Apple Distribution: Sofscript Systems
+				// & Services Ltd." certificate and the "KLESPrescriptionDiary" provisioning
+				// profile into Xcode/Keychain on the build Mac, then set DEVELOPMENT_TEAM
+				// below to your Apple team ID (Xcode will also prompt for it).
+				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				PROVISIONING_PROFILE_SPECIFIER = KLESPrescriptionDiary;
+				DEVELOPMENT_TEAM = "";
 			};
 			name = Release;
 		};
