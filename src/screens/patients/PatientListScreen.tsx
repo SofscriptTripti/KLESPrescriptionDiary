@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   doctorName: { ...typography.captionStrong, color: colors.textPrimary },
-  ptnNo: { ...typography.caption, color: colors.textMuted, marginTop: spacing.xs },
+  ptnNo: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs },
   filterBar: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
