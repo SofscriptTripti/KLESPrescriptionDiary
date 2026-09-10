@@ -13,6 +13,7 @@ import type { ObsvGrpWeb, VitalSignsNewModel } from '../../types/models';
  * the way MAUI's NewVitalSignsAdapter groups by OBSNAME. */
 interface VitalSignRow {
   name: string;
+  OBSNAME: string;
   base: VitalSignsNewModel;
   points: { label: string; value: number }[];
 }
@@ -30,6 +31,13 @@ function formatShortDate(d: Date): string {
   if (d.getTime() === 0) return '';
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+}
+
+/** OBSUNIT often comes back blank from the backend; fall back to the unit embedded
+ * in OBSNAME, e.g. "TEMPERATURE (˚ F)" -> "˚ F". */
+function resolveUnit(obsName: string): string {
+  const match = /\(([^)]+)\)\s*$/.exec(obsName ?? '');
+  return match ? match[1].trim() : '';
 }
 
 /** Ports NewVitalSignsAdapter.GetVitComponentsNames()/GetSignsListModels(): group the
@@ -65,7 +73,7 @@ function buildRows(observations: VitalSignsNewModel[]): VitalSignRow[] {
       }))
       .filter(p => !Number.isNaN(p.value));
 
-    return { name, base, points };
+    return { name, OBSNAME: name, base, points };
   });
 }
 
@@ -236,7 +244,7 @@ export function VitalSignsScreen({ navigation, route }: RootScreenProps<'VitalSi
                 />
                 <Text style={styles.fieldLine}>Min : {item.base.OBSMIN}</Text>
                 <Text style={styles.fieldLine}>Max : {item.base.OBSMAX}</Text>
-                <Text style={styles.fieldLine}>Unit : {item.base.OBSUNIT}</Text>
+                <Text style={styles.fieldLine}>Unit : {resolveUnit(item.OBSNAME)}</Text>
                 <Text style={styles.fieldLine}>Normal H : {item.base.OBSNRMLMAX}</Text>
                 <Text style={styles.fieldLine}>Normal L : {item.base.OBSNRMLMIN}</Text>
               </View>
