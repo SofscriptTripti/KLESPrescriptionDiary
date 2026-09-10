@@ -28,10 +28,13 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<!-- The Doctor's Notes API (src/api/constants.ts NOTES_URL) only exists on plain
+		     HTTP at this one IP — a narrowly-scoped exception, not an app-wide one. -->
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>114.143.79.62</key>
@@ -43,27 +46,16 @@
 			</dict>
 		</dict>
 	</dict>
-<<<<<<< HEAD
 	<!-- <key>NSLocationWhenInUseUsageDescription</key>
 	<string>Used to verify connection with authorized hospital network access points.</string>
-=======
->>>>>>> f6db4e2 (chnagessmac)
 	<key>NSCameraUsageDescription</key>
 	<string>Used for capturing medical notes and prescription document attachments.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Contacts access is used to communicate with patients when required.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Used to verify connection with authorized hospital network access points.</string>
-	<key>NSMicrophoneUsageDescription</key>
-<<<<<<< HEAD
-	<string>Microphone access is used only when voice input features are enabled.</string> -->
-=======
-	<string>Microphone access is used only when voice input features are enabled.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Used for selecting prescription documents and lab report attachments.</string>
-	<key>RCTNewArchEnabled</key>
-	<true/>
->>>>>>> f6db4e2 (chnagessmac)
+	<key>NSContactsUsageDescription</key>
+	<string>Contacts access is used to communicate with patients when required.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is used only when voice input features are enabled.</string> -->
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialCommunityIcons.ttf</string>
