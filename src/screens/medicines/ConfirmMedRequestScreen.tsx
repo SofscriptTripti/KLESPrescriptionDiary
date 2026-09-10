@@ -60,10 +60,11 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
     const unsubscribe = navigation.addListener('beforeRemove', e => {
       if (e.data.action.type !== 'GO_BACK' && e.data.action.type !== 'POP') return;
       e.preventDefault();
-      navigation.navigate('NewMedicineRequest', {
-        patient,
-        preselected: drafts.map(d => d.med),
-      });
+      navigation.navigate(
+        'NewMedicineRequest',
+        { patient, preselected: drafts.map(d => d.med) },
+        { pop: true },
+      );
     });
     return unsubscribe;
   }, [navigation, patient, drafts]);
@@ -214,20 +215,25 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
     // Matches ConfirmNewMedRequestPage.xaml.cs's Handle_Clicked_1 ("Add New +"),
     // which pops back to the medicine picker — here the current cart is threaded
     // back in as `preselected` so nothing already chosen is lost.
-    navigation.navigate('NewMedicineRequest', {
-      patient,
-      preselected: drafts.map(d => d.med),
-    });
+    // `pop: true` is required: a plain navigate() only reuses the *current*
+    // route or pushes a new one — without it this pushes a second picker
+    // instance on top instead of popping back to the original.
+    navigation.navigate(
+      'NewMedicineRequest',
+      { patient, preselected: drafts.map(d => d.med) },
+      { pop: true },
+    );
   }
 
   /** Leaving without saving (header back or Cancel) still threads the current
    * (possibly trimmed by removeDraft) cart back as `preselected`, so items
    * deleted here no longer show as checked on the medicine picker. */
   function handleBack() {
-    navigation.navigate('NewMedicineRequest', {
-      patient,
-      preselected: drafts.map(d => d.med),
-    });
+    navigation.navigate(
+      'NewMedicineRequest',
+      { patient, preselected: drafts.map(d => d.med) },
+      { pop: true },
+    );
   }
 
   function openRmo() {
