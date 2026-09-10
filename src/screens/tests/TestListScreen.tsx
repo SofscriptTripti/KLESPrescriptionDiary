@@ -101,9 +101,11 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
   }, [load]);
 
   // Mirrors setTests(status) in TestListScreen.xaml.cs: filters the full list
-  // down to rows matching the tapped status button.
+  // down to rows matching the tapped status button. TESTSTATUS often comes
+  // back from the API as a numeric string (e.g. "5") rather than a number, so
+  // compare numerically instead of with strict equality.
   const filteredTests = useMemo(
-    () => (activeFilter == null ? tests : tests.filter(t => t.TESTSTATUS === activeFilter)),
+    () => (activeFilter == null ? tests : tests.filter(t => Number(t.TESTSTATUS) === activeFilter)),
     [tests, activeFilter],
   );
   const isEmpty = useMemo(() => filteredTests.length === 0, [filteredTests]);
