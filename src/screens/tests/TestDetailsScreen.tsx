@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row' },
   cell: {
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
