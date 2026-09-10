@@ -160,6 +160,7 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
       </Card>
 
       <View style={styles.tableHeader}>
+        <View style={styles.checkboxSpacer} />
         <Text style={[styles.tableHeaderLabel, styles.colGeneric]}>Generic Name</Text>
         <Text style={[styles.tableHeaderLabel, styles.colItemCd]}>Item Cd</Text>
         <Text style={[styles.tableHeaderLabel, styles.colItemName]}>Item Name</Text>
@@ -311,6 +312,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   tableHeaderLabel: { ...typography.captionStrong, color: colors.textOnPrimary },
+  checkboxSpacer: { width: 20 },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   row: {
