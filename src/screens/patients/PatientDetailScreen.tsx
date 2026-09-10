@@ -188,10 +188,10 @@ const styles = StyleSheet.create({
   },
   contactLabel: { ...typography.caption, color: colors.textOnPrimary },
   infoCard: { padding: spacing.md },
-  infoRow: { flexDirection: 'row', marginBottom: spacing.sm },
-  infoField: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.sm },
+  infoField: { flex: 1, flexDirection: 'column' },
   infoLabel: { ...typography.captionStrong, color: colors.primary },
-  infoValue: { ...typography.captionStrong, color: colors.textPrimary },
+  infoValue: { ...typography.captionStrong, color: colors.textPrimary, marginTop: 2, paddingRight: spacing.sm },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

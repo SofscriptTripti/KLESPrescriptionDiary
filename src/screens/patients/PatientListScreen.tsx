@@ -165,7 +165,7 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
           <TouchableOpacity onPress={() => navigation.navigate('PatientDetail', { patient: item })}>
             <Card style={styles.card}>
               <View style={styles.row}>
-                <GenderAvatar gender={item.PATIENT_GENDER} />
+                <GenderAvatar gender={item.PATIENT_GENDER} size={44} />
                 <View style={styles.info}>
                   <Text style={styles.name} numberOfLines={1}>
                     {item.PATIENT_NAME}
@@ -182,13 +182,13 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                     </Text>
                     <View style={styles.contactIcons}>
                       <TouchableOpacity style={styles.contactIconBtn} onPress={() => call(item.PATIENT_MOBILE)} hitSlop={8}>
-                        <Icon name="phone" size={22} color={colors.primary} />
+                        <Icon name="phone" size={18} color={colors.primary} />
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.contactIconBtn} onPress={() => sms(item.PATIENT_MOBILE)} hitSlop={8}>
-                        <Icon name="message-text" size={22} color={colors.primary} />
+                        <Icon name="message-text" size={18} color={colors.primary} />
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.contactIconBtn} onPress={() => whatsapp(item.PATIENT_MOBILE)} hitSlop={8}>
-                        <Icon name="whatsapp" size={22} color={colors.success} />
+                        <Icon name="whatsapp" size={18} color={colors.success} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -208,13 +208,13 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                         </Text>
                         <View style={styles.contactIcons}>
                           <TouchableOpacity style={styles.contactIconBtn} onPress={() => call(item.DOC_MOBILENO)} hitSlop={8}>
-                            <Icon name="phone" size={22} color={colors.primary} />
+                            <Icon name="phone" size={18} color={colors.primary} />
                           </TouchableOpacity>
                           <TouchableOpacity style={styles.contactIconBtn} onPress={() => sms(item.DOC_MOBILENO)} hitSlop={8}>
-                            <Icon name="message-text" size={22} color={colors.primary} />
+                            <Icon name="message-text" size={18} color={colors.primary} />
                           </TouchableOpacity>
                           <TouchableOpacity style={styles.contactIconBtn} onPress={() => whatsapp(item.DOC_MOBILENO)} hitSlop={8}>
-                            <Icon name="whatsapp" size={22} color={colors.success} />
+                            <Icon name="whatsapp" size={18} color={colors.success} />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
   },
   list: { padding: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
-  card: { marginBottom: spacing.md },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  card: { marginBottom: spacing.xs, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   info: { flex: 1 },
   name: { ...typography.bodyStrong, color: colors.textPrimary },
   meta: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
@@ -354,26 +354,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.xs,
+    marginTop: 2,
   },
   mobile: { ...typography.captionStrong, color: colors.primary, flexShrink: 1, marginRight: spacing.sm },
   contactIcons: { flexDirection: 'row', gap: spacing.xs },
   contactIconBtn: {
-    width: 36,
-    height: 36,
+    width: 28,
+    height: 28,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
   },
   doctorBlock: {
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
+    marginTop: spacing.xs,
+    paddingTop: spacing.xs,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
   doctorName: { ...typography.captionStrong, color: colors.textPrimary },
-  ptnNo: { ...typography.caption, color: colors.textMuted, marginTop: spacing.sm },
+  ptnNo: { ...typography.caption, color: colors.textMuted, marginTop: spacing.xs },
   filterBar: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
