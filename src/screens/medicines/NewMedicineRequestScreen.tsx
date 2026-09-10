@@ -160,7 +160,7 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
       </Card>
 
       <View style={styles.tableHeader}>
-        <View style={styles.checkboxSpacer} />
+        <View style={styles.checkboxCol} />
         <Text style={[styles.tableHeaderLabel, styles.colGeneric]}>Generic Name</Text>
         <Text style={[styles.tableHeaderLabel, styles.colItemCd]}>Item Cd</Text>
         <Text style={[styles.tableHeaderLabel, styles.colItemName]}>Item Name</Text>
@@ -185,11 +185,13 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
             <TouchableOpacity
               style={[styles.row, checked && styles.rowChecked]}
               onPress={() => toggle(item)}>
-              <Icon
-                name={checked ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                size={20}
-                color={checked ? colors.primary : colors.textMuted}
-              />
+              <View style={styles.checkboxCol}>
+                <Icon
+                  name={checked ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                  size={20}
+                  color={checked ? colors.primary : colors.textMuted}
+                />
+              </View>
               <Text style={[styles.rowCell, styles.colGeneric]} numberOfLines={2}>
                 {item.gen_nm}
               </Text>
@@ -312,7 +314,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   tableHeaderLabel: { ...typography.captionStrong, color: colors.textOnPrimary },
-  checkboxSpacer: { width: 20 },
+  checkboxCol: { width: 24, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   row: {
@@ -326,7 +328,7 @@ const styles = StyleSheet.create({
   rowChecked: { backgroundColor: colors.primaryLight },
   rowCell: { ...typography.caption, color: colors.textPrimary },
   colGeneric: { flex: 1 },
-  colItemCd: { width: 64 },
+  colItemCd: { width: 80 },
   colItemName: { flex: 1.6 },
   footer: {
     padding: spacing.lg,
