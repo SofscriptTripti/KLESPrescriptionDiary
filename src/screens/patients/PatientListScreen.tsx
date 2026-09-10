@@ -363,18 +363,17 @@ const styles = StyleSheet.create({
   ptnNo: { ...typography.caption, color: colors.textMuted, marginTop: spacing.sm },
   filterBar: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.success,
+    paddingBottom: spacing.md,
   },
   filterBtn: {
     flex: 1,
     paddingVertical: spacing.md,
     alignItems: 'center',
     borderRightWidth: 1,
-    borderRightColor: colors.border,
+    borderRightColor: 'rgba(255,255,255,0.25)',
   },
-  filterBtnLabel: { ...typography.bodyStrong, color: colors.primary },
+  filterBtnLabel: { ...typography.bodyStrong, color: colors.textOnPrimary },
   modalBackdrop: {
     flex: 1,
     backgroundColor: colors.overlay,

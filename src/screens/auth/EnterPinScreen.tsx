@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -17,11 +18,17 @@ import { getDeviceId } from '../../utils/deviceId';
 import { fetchAuthToken, getUserMst, validateUser } from '../../api/services/auth';
 import { getUserMobileNo, setMode, setUser } from '../../storage/session';
 import type { RootScreenProps } from '../../navigation/types';
+import type { User } from '../../types/models';
 
 export function EnterPinScreen({ navigation }: RootScreenProps<'EnterPin'>) {
   const [mobileNo, setMobileNo] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
+  // Mirrors MainScreen.xaml/.xaml.cs: after a successful PIN, MAUI shows a
+  // page with two hardcoded buttons ("IP List" / "OP List" — not API-driven)
+  // and branches by UserTyp on IP. Shown here as a modal, gating navigation
+  // until the user picks one.
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
 
   useEffect(() => {
     getUserMobileNo().then(setMobileNo);
@@ -66,17 +73,30 @@ export function EnterPinScreen({ navigation }: RootScreenProps<'EnterPin'>) {
       }
 
       await setUser(user);
-      await setMode('ip');
-      if (user.UserTyp === '3') {
-        navigation.reset({ index: 0, routes: [{ name: 'WardList' }] });
-      } else {
-        navigation.reset({ index: 0, routes: [{ name: 'PatientList', params: undefined }] });
-      }
+      setPendingUser(user);
     } catch (err) {
       console.error('[EnterPinScreen] PIN validation error:', err);
       Alert.alert('Validate User', 'Mobile not registered');
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Mirrors MainScreen.xaml.cs's Handle_Clicked (IP List): UserTyp "1"/"2" go
+  // to the regular patient list, "3" (RMO/ward-level user) goes to the ward
+  // list instead.
+  async function choosePatientType(type: 'ip' | 'op') {
+    const user = pendingUser;
+    setPendingUser(null);
+    await setMode(type);
+    if (type === 'op') {
+      navigation.reset({ index: 0, routes: [{ name: 'OPPatientList' }] });
+      return;
+    }
+    if (user?.UserTyp === '3') {
+      navigation.reset({ index: 0, routes: [{ name: 'WardList' }] });
+    } else {
+      navigation.reset({ index: 0, routes: [{ name: 'PatientList', params: undefined }] });
     }
   }
 
@@ -164,6 +184,48 @@ export function EnterPinScreen({ navigation }: RootScreenProps<'EnterPin'>) {
         </ScrollView>
       </KeyboardAvoidingView>
       <LoadingOverlay visible={loading} label="Loading..." />
+
+      {/* Mirrors MainScreen.xaml's "IP List" / "OP List" buttons — shown once,
+          right after PIN validation, as a required choice before proceeding. */}
+      <Modal visible={!!pendingUser} transparent animationType="fade" onRequestClose={() => {}}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalBox}>
+            <View style={styles.modalIconBadge}>
+              <Icon name="account-question-outline" size={28} color={colors.primary} />
+            </View>
+            <Text style={styles.modalTitle}>Select Patient Type</Text>
+            <Text style={styles.modalSubtitle}>Choose which patient list you want to open.</Text>
+
+            <TouchableOpacity
+              style={styles.typeOption}
+              activeOpacity={0.8}
+              onPress={() => choosePatientType('ip')}>
+              <View style={styles.typeIconBadge}>
+                <Icon name="bed-outline" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.typeTextWrap}>
+                <Text style={styles.typeTitle}>IP Patient</Text>
+                <Text style={styles.typeSubtitle}>In-patient prescriptions & records</Text>
+              </View>
+              <Icon name="chevron-right" size={22} color={colors.textMuted} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.typeOption}
+              activeOpacity={0.8}
+              onPress={() => choosePatientType('op')}>
+              <View style={styles.typeIconBadge}>
+                <Icon name="account-injury-outline" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.typeTextWrap}>
+                <Text style={styles.typeTitle}>OP Patient</Text>
+                <Text style={styles.typeSubtitle}>Out-patient list</Text>
+              </View>
+              <Icon name="chevron-right" size={22} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -302,4 +364,58 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
   },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+    ...shadow.card,
+  },
+  modalIconBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  modalTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'center' },
+  modalSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  typeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  typeIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeTextWrap: { flex: 1 },
+  typeTitle: { ...typography.bodyStrong, color: colors.textPrimary },
+  typeSubtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
 });
