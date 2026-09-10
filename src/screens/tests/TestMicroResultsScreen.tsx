@@ -3,7 +3,6 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Screen, AppHeader, LoadingOverlay, EmptyState } from '../../components';
 import { colors, spacing, typography } from '../../theme';
 import { getMicroResult } from '../../api/services/tests';
-import { useLandscapeOnFocus } from '../../utils/orientation';
 import type { RootScreenProps } from '../../navigation/types';
 import type { MicroResultDataModel } from '../../types/models';
 
@@ -27,7 +26,6 @@ export function TestMicroResultsScreen({ navigation, route }: RootScreenProps<'T
   const [rows, setRows] = useState<MicroResultDataModel[]>([]);
   const [reportNote, setReportNote] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
-  useLandscapeOnFocus();
 
   const load = useCallback(async () => {
     setLoading(true);

@@ -14,7 +14,6 @@ import { Screen, AppHeader, LoadingOverlay, EmptyState, Card } from '../../compo
 import { colors, radius, spacing, typography } from '../../theme';
 import { getTestList } from '../../api/services/tests';
 import { getMode } from '../../storage/session';
-import { useLandscapeOnFocus } from '../../utils/orientation';
 import type { RootScreenProps } from '../../navigation/types';
 import type { TestsModel, TestStatus } from '../../types/models';
 
@@ -78,7 +77,6 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<TestStatus | null>(null);
-  useLandscapeOnFocus();
 
   const load = useCallback(async (isRefresh = false) => {
     isRefresh ? setRefreshing(true) : setLoading(true);

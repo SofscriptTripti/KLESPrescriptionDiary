@@ -5,7 +5,6 @@ import { Screen, AppHeader, LoadingOverlay, EmptyState } from '../../components'
 import { colors, spacing, typography } from '../../theme';
 import { getTestComponents } from '../../api/services/tests';
 import { getMode } from '../../storage/session';
-import { useLandscapeOnFocus } from '../../utils/orientation';
 import type { RootScreenProps } from '../../navigation/types';
 import type { TestComponentModel } from '../../types/models';
 
@@ -94,7 +93,6 @@ export function TestDetailsScreen({ navigation, route }: RootScreenProps<'TestDe
   const { patient, test } = route.params;
   const [components, setComponents] = useState<TestComponentModel[]>([]);
   const [loading, setLoading] = useState(true);
-  useLandscapeOnFocus();
 
   const load = useCallback(async () => {
     setLoading(true);
