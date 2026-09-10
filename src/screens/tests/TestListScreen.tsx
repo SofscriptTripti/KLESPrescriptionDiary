@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Screen, AppHeader, LoadingOverlay, EmptyState, Card } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
@@ -32,6 +41,21 @@ function statusMeta(status: TestStatus): StatusMeta {
   return STATUS_META[status] ?? STATUS_META[6];
 }
 
+// Mirrors TestListScreen.xaml's bottom status-filter button row (Authorised/
+// Rejected/Collected/Pending/Reported/Result Received/Others), each wired to
+// setTests(status) in the code-behind. "All" has no MAUI equivalent — it's
+// the RN default (unfiltered) view.
+const STATUS_FILTERS: { status: TestStatus | null; label: string }[] = [
+  { status: null, label: 'All' },
+  { status: 5, label: 'Authorised' },
+  { status: 3, label: 'Rejected' },
+  { status: 2, label: 'Collected' },
+  { status: 1, label: 'Pending' },
+  { status: 4, label: 'Reported' },
+  { status: 10, label: 'Result Received' },
+  { status: 6, label: 'Others' },
+];
+
 /** Mirrors DiagnosticTestFragment/RadiologyTestFragment's FetchReportThread(): a
  * report-flagged test ("TestFlg" == "r") opens the resolved report file instead
  * of the component-detail screen. */
@@ -53,6 +77,7 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
   const [tests, setTests] = useState<TestsModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<TestStatus | null>(null);
   useLandscapeOnFocus();
 
   const load = useCallback(async (isRefresh = false) => {
@@ -75,7 +100,13 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
     load();
   }, [load]);
 
-  const isEmpty = useMemo(() => tests.length === 0, [tests]);
+  // Mirrors setTests(status) in TestListScreen.xaml.cs: filters the full list
+  // down to rows matching the tapped status button.
+  const filteredTests = useMemo(
+    () => (activeFilter == null ? tests : tests.filter(t => t.TESTSTATUS === activeFilter)),
+    [tests, activeFilter],
+  );
+  const isEmpty = useMemo(() => filteredTests.length === 0, [filteredTests]);
 
   return (
     <Screen>
@@ -90,8 +121,39 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
         }
       />
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterBar}
+        contentContainerStyle={styles.filterBarContent}>
+        {STATUS_FILTERS.map(filter => {
+          const meta = filter.status == null ? null : statusMeta(filter.status);
+          const isActive = activeFilter === filter.status;
+          return (
+            <TouchableOpacity
+              key={filter.label}
+              activeOpacity={0.8}
+              style={[
+                styles.filterChip,
+                { backgroundColor: meta ? meta.bg : colors.surfaceAlt },
+                isActive && { backgroundColor: meta ? meta.color : colors.primary },
+              ]}
+              onPress={() => setActiveFilter(current => (current === filter.status ? null : filter.status))}>
+              <Text
+                style={[
+                  styles.filterChipLabel,
+                  { color: meta ? meta.color : colors.textSecondary },
+                  isActive && styles.filterChipLabelActive,
+                ]}>
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       <FlatList
-        data={tests}
+        data={filteredTests}
         keyExtractor={(item, index) => `${item.LABNO}-${item.TESTCD}-${item.CHRGCD}-${index}`}
         contentContainerStyle={[styles.list, isEmpty && styles.emptyContainer]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
@@ -99,8 +161,12 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
           !loading ? (
             <EmptyState
               icon="test-tube-empty"
-              title="No tests found"
-              subtitle="Pull down to refresh or request a new test."
+              title={activeFilter == null ? 'No tests found' : 'No tests match this filter'}
+              subtitle={
+                activeFilter == null
+                  ? 'Pull down to refresh or request a new test.'
+                  : 'Try a different status filter.'
+              }
             />
           ) : undefined
         }
@@ -197,6 +263,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
+  filterBar: { flexGrow: 0, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  filterBarContent: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm },
+  filterChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    marginRight: spacing.sm,
+  },
+  filterChipLabel: { ...typography.captionStrong, fontSize: 12 },
+  filterChipLabelActive: { color: colors.textOnPrimary },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   card: { marginBottom: spacing.md },
