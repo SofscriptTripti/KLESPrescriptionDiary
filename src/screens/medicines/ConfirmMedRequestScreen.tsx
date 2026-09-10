@@ -52,6 +52,22 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The hardware/system back button and the swipe-back gesture dispatch a
+  // GO_BACK/POP action directly, bypassing the header's onBack — intercept
+  // those too so medicines removed here (removeDraft) don't still show as
+  // checked on the medicine picker when the user leaves without saving.
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', e => {
+      if (e.data.action.type !== 'GO_BACK' && e.data.action.type !== 'POP') return;
+      e.preventDefault();
+      navigation.navigate('NewMedicineRequest', {
+        patient,
+        preselected: drafts.map(d => d.med),
+      });
+    });
+    return unsubscribe;
+  }, [navigation, patient, drafts]);
+
   async function load() {
     setLoading(true);
     try {
@@ -204,6 +220,16 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
     });
   }
 
+  /** Leaving without saving (header back or Cancel) still threads the current
+   * (possibly trimmed by removeDraft) cart back as `preselected`, so items
+   * deleted here no longer show as checked on the medicine picker. */
+  function handleBack() {
+    navigation.navigate('NewMedicineRequest', {
+      patient,
+      preselected: drafts.map(d => d.med),
+    });
+  }
+
   function openRmo() {
     const docCd = Number(patient.PATIENT_DOCCD);
     navigation.navigate('RMO', { docCd: Number.isNaN(docCd) ? 0 : docCd });
@@ -214,7 +240,7 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
       <AppHeader
         title="Confirm Request"
         subtitle={patient.PATIENT_NAME}
-        onBack={() => navigation.goBack()}
+        onBack={handleBack}
         right={
           // Matches ConfirmNewMedRequestPage.xaml's ToolbarItem (Text="RMO").
           <TouchableOpacity onPress={openRmo} style={styles.headerBtn}>
@@ -322,7 +348,7 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
           <Button
             label="Cancel"
             variant="danger"
-            onPress={() => navigation.goBack()}
+            onPress={handleBack}
             style={styles.footerBtn}
           />
         </View>

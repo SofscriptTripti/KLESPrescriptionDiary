@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Screen, AppHeader, Button, Card, LoadingOverlay, EmptyState } from '../../components';
@@ -27,6 +27,20 @@ export function NewMedicineRequestScreen({ navigation, route }: RootScreenProps<
   const [selected, setSelected] = useState<Map<string, GenMedicineListModel>>(
     () => new Map((preselected ?? []).map(m => [m.item_cd, m])),
   );
+
+  // `preselected` also arrives on later visits — via "Add New", or via Confirm
+  // Request's back/cancel threading back its (possibly trimmed) cart — but the
+  // useState initializer above only runs on first mount. Re-sync on every
+  // subsequent change so medicines removed on Confirm Request stop showing as
+  // checked here. Skip the very first run since the initializer already covered it.
+  const isFirstRun = useRef(true);
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
+    setSelected(new Map((preselected ?? []).map(m => [m.item_cd, m])));
+  }, [preselected]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
