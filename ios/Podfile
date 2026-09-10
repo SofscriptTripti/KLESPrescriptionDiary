@@ -24,11 +24,15 @@ setup_permissions([
   'Microphone',
 ])
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+# Always build pods as frameworks (static by default, override with
+# USE_FRAMEWORKS=dynamic if ever needed) — AppDelegate.swift's
+# `import react_native_orientation_locker` only resolves as a Swift module
+# under frameworks linkage. Making this unconditional means a plain
+# `pod install` on any machine produces a working build, instead of relying
+# on everyone remembering to set USE_FRAMEWORKS first.
+linkage = ENV['USE_FRAMEWORKS'] || 'static'
+Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+use_frameworks! :linkage => linkage.to_sym
 
 target 'KLESPrescriptionDiary' do
   config = use_native_modules!
