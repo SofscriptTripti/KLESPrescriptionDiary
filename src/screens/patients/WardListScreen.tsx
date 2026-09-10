@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, Button, LoadingOverlay, EmptyState } from '../../components';
+import { Screen, AppHeader, Button, LoadingOverlay, EmptyState, PatientTypeModal } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getWardList } from '../../api/services/patients';
 import { setMode } from '../../storage/session';
@@ -12,6 +12,7 @@ export function WardListScreen({ navigation }: RootScreenProps<'WardList'>) {
   const [wards, setWards] = useState<WardModel[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [showTypeModal, setShowTypeModal] = useState(false);
 
   useEffect(() => {
     load();
@@ -51,17 +52,12 @@ export function WardListScreen({ navigation }: RootScreenProps<'WardList'>) {
     navigation.navigate('PatientList', { wardCd: wardString });
   }
 
-  async function openOpFlow() {
-    await setMode('op');
-    navigation.navigate('OPPatientList');
-  }
-
-  function openSwitchMenu() {
-    Alert.alert('Switch section', undefined, [
-      { text: 'OP Patients', onPress: openOpFlow },
-      { text: 'RMO', onPress: () => navigation.navigate('RMO', undefined) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+  // WardList only ever shows up for UserTyp "3", so picking IP again just
+  // stays put and OP replaces with OPPatientList — no need to check UserTyp.
+  async function handleTypeSelect(type: 'ip' | 'op') {
+    setShowTypeModal(false);
+    await setMode(type);
+    navigation.replace(type === 'op' ? 'OPPatientList' : 'WardList');
   }
 
   return (
@@ -70,9 +66,17 @@ export function WardListScreen({ navigation }: RootScreenProps<'WardList'>) {
         title="Select Ward"
         onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
         right={
-          <TouchableOpacity onPress={openSwitchMenu} hitSlop={8} style={styles.menuBtn}>
-            <Icon name="dots-vertical" size={22} color={colors.textOnPrimary} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={() => setShowTypeModal(true)} hitSlop={8} style={styles.menuBtn}>
+              <Icon name="account-switch" size={22} color={colors.textOnPrimary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('RMO', undefined)}
+              hitSlop={8}
+              style={styles.menuBtn}>
+              <Icon name="doctor" size={22} color={colors.textOnPrimary} />
+            </TouchableOpacity>
+          </View>
         }
       />
       <TouchableOpacity style={styles.selectAllRow} onPress={toggleAll} disabled={wards.length === 0}>
@@ -108,11 +112,17 @@ export function WardListScreen({ navigation }: RootScreenProps<'WardList'>) {
         <Button label={`Continue (${selected.size} selected)`} onPress={handleSubmit} fullWidth />
       </View>
       <LoadingOverlay visible={loading} label="Loading wards…" />
+      <PatientTypeModal
+        visible={showTypeModal}
+        onSelect={handleTypeSelect}
+        onDismiss={() => setShowTypeModal(false)}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
   menuBtn: { padding: spacing.xs },
   selectAllRow: {
     flexDirection: 'row',

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,11 +11,12 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, Button, Card, LoadingOverlay } from '../../components';
+import { Screen, AppHeader, Button, Card, LoadingOverlay, PatientTypeModal } from '../../components';
 import { colors, radius, shadow, spacing, typography } from '../../theme';
 import { getDeviceId } from '../../utils/deviceId';
 import { fetchAuthToken, getUserMst, validateUser } from '../../api/services/auth';
 import { getUserMobileNo, setMode, setUser } from '../../storage/session';
+import { patientTypeRoute } from '../../navigation/patientType';
 import type { RootScreenProps } from '../../navigation/types';
 import type { User } from '../../types/models';
 
@@ -24,19 +24,21 @@ export function EnterPinScreen({ navigation }: RootScreenProps<'EnterPin'>) {
   const [mobileNo, setMobileNo] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
-  // Mirrors MainScreen.xaml/.xaml.cs: after a successful PIN, MAUI shows a
-  // page with two hardcoded buttons ("IP List" / "OP List" — not API-driven)
-  // and branches by UserTyp on IP. Shown here as a modal, gating navigation
-  // until the user picks one.
+  // Set once PIN validation succeeds; its presence gates the "Select Patient
+  // Type" modal (mirrors MainScreen.xaml's IP List/OP List buttons — the
+  // required step shown right after PIN, before any patient list loads).
   const [pendingUser, setPendingUser] = useState<User | null>(null);
 
   useEffect(() => {
     getUserMobileNo().then(setMobileNo);
   }, []);
 
-  // Alert titles/messages below are transcribed verbatim from EnterPin.xaml.cs
-  // (DisplayAlert calls) so the RN app shows the same user-facing text as MAUI,
-  // instead of raw API/technical wording.
+  // NOTE: EnterPin.xaml.cs shows "Mobile not registered" for a failed PIN
+  // check too (ValidateUser's boolean response doesn't say why it failed).
+  // That's misleading here — the mobile number is already known/registered
+  // by the time this screen is reached (it's read from storage above and
+  // was validated during the initial Login step) — so a `false` result at
+  // this specific step almost always just means the PIN was wrong.
   async function handleSubmit() {
     if (pin.trim().length !== 4) {
       Alert.alert('Validation', 'Enter a valid pin number');
@@ -58,7 +60,7 @@ export function EnterPinScreen({ navigation }: RootScreenProps<'EnterPin'>) {
         deviceIMEI: deviceId,
       });
       if (!validated) {
-        Alert.alert('Validate User', 'Mobile not registered');
+        Alert.alert('Invalid PIN', 'The PIN you entered is incorrect. Please try again.');
         return;
       }
 
@@ -76,37 +78,28 @@ export function EnterPinScreen({ navigation }: RootScreenProps<'EnterPin'>) {
       setPendingUser(user);
     } catch (err) {
       console.error('[EnterPinScreen] PIN validation error:', err);
-      Alert.alert('Validate User', 'Mobile not registered');
+      Alert.alert('Error', 'Something went wrong. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
   }
 
-  // Mirrors MainScreen.xaml.cs's Handle_Clicked (IP List): UserTyp "1"/"2" go
-  // to the regular patient list, "3" (RMO/ward-level user) goes to the ward
-  // list instead.
-  async function choosePatientType(type: 'ip' | 'op') {
+  async function handleTypeSelect(type: 'ip' | 'op') {
     const user = pendingUser;
     setPendingUser(null);
     await setMode(type);
-    if (type === 'op') {
-      navigation.reset({ index: 0, routes: [{ name: 'OPPatientList' }] });
-      return;
-    }
-    if (user?.UserTyp === '3') {
-      navigation.reset({ index: 0, routes: [{ name: 'WardList' }] });
-    } else {
-      navigation.reset({ index: 0, routes: [{ name: 'PatientList', params: undefined }] });
-    }
+    // Resets (not pushes) so this list screen becomes the stack root — no
+    // back button lands on PIN entry via swipe-back/hardware back. The list
+    // screen's own back button reopens this same modal to switch type later.
+    navigation.reset({ index: 0, routes: [{ name: patientTypeRoute(type, user) }] });
   }
 
   return (
     <Screen edges={['top', 'bottom', 'left', 'right']}>
-      <AppHeader
-        title="Security PIN"
-        subtitle={mobileNo ? `Mobile: ${mobileNo}` : undefined}
-        onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.replace('Login'))}
-      />
+      {/* No back button — the only way to change the registered mobile
+          number is to clear the app's data/uninstall, not to navigate back
+          from here. */}
+      <AppHeader title="Security PIN" subtitle={mobileNo ? `Mobile: ${mobileNo}` : undefined} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -184,48 +177,7 @@ export function EnterPinScreen({ navigation }: RootScreenProps<'EnterPin'>) {
         </ScrollView>
       </KeyboardAvoidingView>
       <LoadingOverlay visible={loading} label="Loading..." />
-
-      {/* Mirrors MainScreen.xaml's "IP List" / "OP List" buttons — shown once,
-          right after PIN validation, as a required choice before proceeding. */}
-      <Modal visible={!!pendingUser} transparent animationType="fade" onRequestClose={() => {}}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalBox}>
-            <View style={styles.modalIconBadge}>
-              <Icon name="account-question-outline" size={28} color={colors.primary} />
-            </View>
-            <Text style={styles.modalTitle}>Select Patient Type</Text>
-            <Text style={styles.modalSubtitle}>Choose which patient list you want to open.</Text>
-
-            <TouchableOpacity
-              style={styles.typeOption}
-              activeOpacity={0.8}
-              onPress={() => choosePatientType('ip')}>
-              <View style={styles.typeIconBadge}>
-                <Icon name="bed-outline" size={24} color={colors.primary} />
-              </View>
-              <View style={styles.typeTextWrap}>
-                <Text style={styles.typeTitle}>IP Patient</Text>
-                <Text style={styles.typeSubtitle}>In-patient prescriptions & records</Text>
-              </View>
-              <Icon name="chevron-right" size={22} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.typeOption}
-              activeOpacity={0.8}
-              onPress={() => choosePatientType('op')}>
-              <View style={styles.typeIconBadge}>
-                <Icon name="account-injury-outline" size={24} color={colors.primary} />
-              </View>
-              <View style={styles.typeTextWrap}>
-                <Text style={styles.typeTitle}>OP Patient</Text>
-                <Text style={styles.typeSubtitle}>Out-patient list</Text>
-              </View>
-              <Icon name="chevron-right" size={22} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <PatientTypeModal visible={!!pendingUser} onSelect={handleTypeSelect} />
     </Screen>
   );
 }
@@ -364,58 +316,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
   },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalBox: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    alignItems: 'center',
-    ...shadow.card,
-  },
-  modalIconBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  modalTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'center' },
-  modalSubtitle: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-    marginBottom: spacing.lg,
-  },
-  typeOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    gap: spacing.md,
-  },
-  typeIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  typeTextWrap: { flex: 1 },
-  typeTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-  typeSubtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
 });

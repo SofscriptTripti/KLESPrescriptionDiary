@@ -46,7 +46,7 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
+	<!-- <key>NSLocationWhenInUseUsageDescription</key>
 	<string>Used to verify connection with authorized hospital network access points.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Used for capturing medical notes and prescription document attachments.</string>
@@ -55,7 +55,7 @@
 	<key>NSContactsUsageDescription</key>
 	<string>Contacts access is used to communicate with patients when required.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone access is used only when voice input features are enabled.</string>
+	<string>Microphone access is used only when voice input features are enabled.</string> -->
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialCommunityIcons.ttf</string>

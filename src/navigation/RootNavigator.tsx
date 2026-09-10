@@ -9,7 +9,6 @@ import { getAuthToken, getUserMobileNo } from '../storage/session';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { EnterPinScreen } from '../screens/auth/EnterPinScreen';
 import { ChangePinScreen } from '../screens/auth/ChangePinScreen';
-import { HomeScreen } from '../screens/home/HomeScreen';
 import { WardListScreen } from '../screens/patients/WardListScreen';
 import { PatientListScreen } from '../screens/patients/PatientListScreen';
 import { PatientDetailScreen } from '../screens/patients/PatientDetailScreen';
@@ -71,7 +70,6 @@ export function RootNavigator() {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="EnterPin" component={EnterPinScreen} />
       <Stack.Screen name="ChangePin" component={ChangePinScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="WardList" component={WardListScreen} />
       <Stack.Screen name="PatientList" component={PatientListScreen} />
       <Stack.Screen name="PatientDetail" component={PatientDetailScreen} />

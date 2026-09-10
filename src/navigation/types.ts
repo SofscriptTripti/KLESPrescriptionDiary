@@ -5,7 +5,6 @@ export type RootStackParamList = {
   Login: undefined;
   EnterPin: undefined;
   ChangePin: undefined;
-  Home: undefined;
   WardList: undefined;
   PatientList: { wardCd?: string } | undefined;
   PatientDetail: { patient: PatientModel };

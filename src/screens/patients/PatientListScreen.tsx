@@ -1,10 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, TextField, LoadingOverlay, EmptyState, Card, GenderAvatar } from '../../components';
+import {
+  Screen,
+  AppHeader,
+  TextField,
+  LoadingOverlay,
+  EmptyState,
+  Card,
+  GenderAvatar,
+  PatientTypeModal,
+} from '../../components';
 import { colors, radius, shadow, spacing, typography } from '../../theme';
 import { getPatientList } from '../../api/services/patients';
 import { getUser, setMode } from '../../storage/session';
+import { patientTypeRoute } from '../../navigation/patientType';
 import type { RootScreenProps } from '../../navigation/types';
 import type { PatientModel, User } from '../../types/models';
 
@@ -109,17 +119,12 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
     );
   }
 
-  async function openOpFlow() {
-    await setMode('op');
-    navigation.navigate('OPPatientList');
-  }
+  const [showTypeModal, setShowTypeModal] = useState(false);
 
-  function openSwitchMenu() {
-    Alert.alert('Switch section', undefined, [
-      { text: 'OP Patients', onPress: openOpFlow },
-      { text: 'RMO', onPress: () => navigation.navigate('RMO', undefined) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+  async function handleTypeSelect(type: 'ip' | 'op') {
+    setShowTypeModal(false);
+    await setMode(type);
+    navigation.replace(patientTypeRoute(type, user));
   }
 
   const showDoctorInfo = user?.UserTyp !== '1';
@@ -130,6 +135,11 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
         title="Patient List"
         centerTitle={true}
         onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+        right={
+          <TouchableOpacity style={styles.menuBtn} onPress={() => setShowTypeModal(true)} hitSlop={8}>
+            <Icon name="account-switch" size={22} color={colors.textOnPrimary} />
+          </TouchableOpacity>
+        }
       />
       <View style={styles.searchWrap}>
         <View style={styles.searchRow}>
@@ -140,9 +150,7 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
             style={styles.searchInput}
             containerStyle={styles.searchFieldContainer}
           />
-          <Text style={styles.countText}>
-            {filtered.length}/{patients.length}
-          </Text>
+          <Text style={styles.countText}>{patients.length}</Text>
         </View>
       </View>
 
@@ -243,7 +251,7 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
       <Modal
         visible={!!filterKind}
         transparent
-        animationType="fade"
+        animationType="none"
         onRequestClose={() => setFilterKind(null)}>
         <TouchableOpacity
           style={styles.modalBackdrop}
@@ -314,6 +322,11 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
       </Modal>
 
       <LoadingOverlay visible={loading} label="Loading patients…" />
+      <PatientTypeModal
+        visible={showTypeModal}
+        onSelect={handleTypeSelect}
+        onDismiss={() => setShowTypeModal(false)}
+      />
     </Screen>
   );
 }
@@ -363,7 +376,7 @@ const styles = StyleSheet.create({
   ptnNo: { ...typography.caption, color: colors.textMuted, marginTop: spacing.sm },
   filterBar: {
     flexDirection: 'row',
-    backgroundColor: colors.success,
+    backgroundColor: colors.primary,
     paddingBottom: spacing.md,
   },
   filterBtn: {

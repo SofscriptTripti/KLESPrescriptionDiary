@@ -1,10 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, TextField, LoadingOverlay, EmptyState, Card, GenderAvatar } from '../../components';
+import {
+  Screen,
+  AppHeader,
+  TextField,
+  LoadingOverlay,
+  EmptyState,
+  Card,
+  GenderAvatar,
+  PatientTypeModal,
+} from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getOPPatientList } from '../../api/services/opPatients';
 import { getUser, setMode } from '../../storage/session';
+import { patientTypeRoute } from '../../navigation/patientType';
 import type { RootScreenProps } from '../../navigation/types';
 import type { PatientModel, User } from '../../types/models';
 
@@ -22,6 +32,7 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
   const [patients, setPatients] = useState<PatientModel[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showTypeModal, setShowTypeModal] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,12 +79,23 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
     navigation.navigate('PatientDetail', { patient });
   }
 
+  async function handleTypeSelect(type: 'ip' | 'op') {
+    setShowTypeModal(false);
+    await setMode(type);
+    navigation.replace(patientTypeRoute(type, user));
+  }
+
   return (
     <Screen>
       <AppHeader
         title="OP Patients"
         subtitle={`${filtered.length} of ${patients.length}`}
-        onBack={() => navigation.goBack()}
+        onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+        right={
+          <TouchableOpacity style={styles.headerBtn} onPress={() => setShowTypeModal(true)} hitSlop={8}>
+            <Icon name="account-switch" size={22} color={colors.textOnPrimary} />
+          </TouchableOpacity>
+        }
       />
       <View style={styles.searchWrap}>
         <TextField
@@ -126,11 +148,17 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
         )}
       />
       <LoadingOverlay visible={loading} label="Loading patients…" />
+      <PatientTypeModal
+        visible={showTypeModal}
+        onSelect={handleTypeSelect}
+        onDismiss={() => setShowTypeModal(false)}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  headerBtn: { padding: spacing.xs },
   searchWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   searchInput: { marginBottom: 0 },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
