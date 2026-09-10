@@ -173,14 +173,14 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                       {item.PATIENT_MOBILE}
                     </Text>
                     <View style={styles.contactIcons}>
-                      <TouchableOpacity onPress={() => call(item.PATIENT_MOBILE)} hitSlop={6}>
-                        <Icon name="phone" size={16} color={colors.primary} />
+                      <TouchableOpacity style={styles.contactIconBtn} onPress={() => call(item.PATIENT_MOBILE)} hitSlop={8}>
+                        <Icon name="phone" size={22} color={colors.primary} />
                       </TouchableOpacity>
-                      <TouchableOpacity onPress={() => sms(item.PATIENT_MOBILE)} hitSlop={6}>
-                        <Icon name="message-text" size={16} color={colors.primary} />
+                      <TouchableOpacity style={styles.contactIconBtn} onPress={() => sms(item.PATIENT_MOBILE)} hitSlop={8}>
+                        <Icon name="message-text" size={22} color={colors.primary} />
                       </TouchableOpacity>
-                      <TouchableOpacity onPress={() => whatsapp(item.PATIENT_MOBILE)} hitSlop={6}>
-                        <Icon name="whatsapp" size={16} color={colors.success} />
+                      <TouchableOpacity style={styles.contactIconBtn} onPress={() => whatsapp(item.PATIENT_MOBILE)} hitSlop={8}>
+                        <Icon name="whatsapp" size={22} color={colors.success} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -199,14 +199,14 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                           {item.DOC_MOBILENO}
                         </Text>
                         <View style={styles.contactIcons}>
-                          <TouchableOpacity onPress={() => call(item.DOC_MOBILENO)} hitSlop={6}>
-                            <Icon name="phone" size={16} color={colors.primary} />
+                          <TouchableOpacity style={styles.contactIconBtn} onPress={() => call(item.DOC_MOBILENO)} hitSlop={8}>
+                            <Icon name="phone" size={22} color={colors.primary} />
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => sms(item.DOC_MOBILENO)} hitSlop={6}>
-                            <Icon name="message-text" size={16} color={colors.primary} />
+                          <TouchableOpacity style={styles.contactIconBtn} onPress={() => sms(item.DOC_MOBILENO)} hitSlop={8}>
+                            <Icon name="message-text" size={22} color={colors.primary} />
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => whatsapp(item.DOC_MOBILENO)} hitSlop={6}>
-                            <Icon name="whatsapp" size={16} color={colors.success} />
+                          <TouchableOpacity style={styles.contactIconBtn} onPress={() => whatsapp(item.DOC_MOBILENO)} hitSlop={8}>
+                            <Icon name="whatsapp" size={22} color={colors.success} />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -344,7 +344,15 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   mobile: { ...typography.captionStrong, color: colors.primary, flexShrink: 1, marginRight: spacing.sm },
-  contactIcons: { flexDirection: 'row', gap: spacing.sm },
+  contactIcons: { flexDirection: 'row', gap: spacing.xs },
+  contactIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   doctorBlock: {
     marginTop: spacing.sm,
     paddingTop: spacing.sm,

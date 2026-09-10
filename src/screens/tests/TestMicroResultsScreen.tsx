@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Screen, AppHeader, LoadingOverlay, EmptyState } from '../../components';
 import { colors, spacing, typography } from '../../theme';
 import { getMicroResult } from '../../api/services/tests';
@@ -7,11 +7,20 @@ import { useLandscapeOnFocus } from '../../utils/orientation';
 import type { RootScreenProps } from '../../navigation/types';
 import type { MicroResultDataModel } from '../../types/models';
 
+const COL_RPTSTS_WIDTH = 90;
+const COL_ANTIBIO_WIDTH = 160;
+const COL_COMPCD_WIDTH = 100;
+const COL_TESTVALUE_WIDTH = 220;
+const ROW_MIN_HEIGHT = 44;
+
 /**
  * Mirrors TestMicroResultsPage.xaml/.xaml.cs — reached (instead of
  * TestDetailsScreen) when a tapped test's LABRPTTYP is "L" (Lab) or "M"
  * (Microbiology): those rows carry microbiology antibiotic-sensitivity data
  * via GetPtnMicroResultTest, not the usual component/value grid.
+ *
+ * Table styled to match TestDetailsScreen's bordered, horizontally
+ * scrollable grid so long antibiotic/value text isn't clipped.
  */
 export function TestMicroResultsScreen({ navigation, route }: RootScreenProps<'TestMicroResults'>) {
   const { test } = route.params;
@@ -37,41 +46,82 @@ export function TestMicroResultsScreen({ navigation, route }: RootScreenProps<'T
     load();
   }, [load]);
 
+  const isEmpty = rows.length === 0;
+
   return (
     <Screen>
       <AppHeader title={test.TESTNAME} subtitle={`Lab No: ${test.LABNO}`} onBack={() => navigation.goBack()} />
 
-      <View style={styles.headerRow}>
-        <Text style={[styles.headerCell, styles.colRptSts]}>Rpt Sts</Text>
-        <Text style={[styles.headerCell, styles.colAntiBio]}>Antibiotics</Text>
-        <Text style={[styles.headerCell, styles.colCompCd]}>Comp Cd</Text>
-        <Text style={[styles.headerCell, styles.colTestValue]}>Test Value</Text>
-      </View>
+      {isEmpty ? (
+        !loading ? <EmptyState icon="flask-off-outline" title="No results found" /> : null
+      ) : (
+        <ScrollView contentContainerStyle={styles.vScroll}>
+          <ScrollView horizontal showsHorizontalScrollIndicator>
+            <View>
+              <View style={styles.row}>
+                <View style={[styles.cell, styles.cellHeader, { width: COL_RPTSTS_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                  <Text style={styles.cellHeaderText} numberOfLines={2}>
+                    Rpt Sts
+                  </Text>
+                </View>
+                <View
+                  style={[styles.cell, styles.cellHeader, { width: COL_ANTIBIO_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                  <Text style={styles.cellHeaderText} numberOfLines={2}>
+                    Antibiotics
+                  </Text>
+                </View>
+                <View style={[styles.cell, styles.cellHeader, { width: COL_COMPCD_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                  <Text style={styles.cellHeaderText} numberOfLines={2}>
+                    Comp Cd
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.cell,
+                    styles.cellHeader,
+                    { width: COL_TESTVALUE_WIDTH, minHeight: ROW_MIN_HEIGHT },
+                  ]}>
+                  <Text style={styles.cellHeaderText} numberOfLines={2}>
+                    Test Value
+                  </Text>
+                </View>
+              </View>
 
-      <FlatList
-        data={rows}
-        keyExtractor={(item, index) => `${item.SAMPLENO}-${item.COMPCD}-${index}`}
-        contentContainerStyle={[styles.list, rows.length === 0 && styles.emptyContainer]}
-        ListEmptyComponent={
-          !loading ? <EmptyState icon="flask-off-outline" title="No results found" /> : undefined
-        }
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <Text style={[styles.cell, styles.colRptSts]} numberOfLines={2}>
-              {item.RPTSTS || '—'}
-            </Text>
-            <Text style={[styles.cell, styles.colAntiBio]} numberOfLines={2}>
-              {item.ANTIBIOTICS || '—'}
-            </Text>
-            <Text style={[styles.cell, styles.colCompCd]} numberOfLines={2}>
-              {item.COMPCD || '—'}
-            </Text>
-            <Text style={[styles.cell, styles.colTestValue]} numberOfLines={2}>
-              {item.TESTVALUE || '—'}
-            </Text>
-          </View>
-        )}
-      />
+              {rows.map((item, index) => (
+                <View key={`${item.SAMPLENO}-${item.COMPCD}-${index}`} style={styles.row}>
+                  <View style={[styles.cell, styles.cellBody, { width: COL_RPTSTS_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                    <Text style={styles.cellBodyText} numberOfLines={2}>
+                      {item.RPTSTS || '—'}
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.cell, styles.cellBody, { width: COL_ANTIBIO_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                    <Text style={styles.cellBodyText} numberOfLines={2}>
+                      {item.ANTIBIOTICS || '—'}
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.cell, styles.cellBody, { width: COL_COMPCD_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
+                    <Text style={styles.cellBodyText} numberOfLines={2}>
+                      {item.COMPCD || '—'}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.cell,
+                      styles.cellBody,
+                      { width: COL_TESTVALUE_WIDTH, minHeight: ROW_MIN_HEIGHT },
+                    ]}>
+                    <Text style={styles.cellBodyText} numberOfLines={2}>
+                      {item.TESTVALUE || '—'}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </ScrollView>
+      )}
 
       {reportNote ? (
         <View style={styles.footer}>
@@ -85,27 +135,20 @@ export function TestMicroResultsScreen({ navigation, route }: RootScreenProps<'T
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  vScroll: { paddingBottom: spacing.xl },
+  row: { flexDirection: 'row' },
+  cell: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
-  headerCell: { ...typography.captionStrong, color: colors.textOnPrimary },
-  row: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  cell: { ...typography.caption, color: colors.textPrimary },
-  colRptSts: { flex: 1 },
-  colAntiBio: { flex: 1 },
-  colCompCd: { flex: 1 },
-  colTestValue: { flex: 3 },
-  list: { paddingBottom: spacing.xl },
-  emptyContainer: { flexGrow: 1, justifyContent: 'center' },
+  cellHeader: { backgroundColor: colors.primary },
+  cellBody: { backgroundColor: colors.surface },
+  cellHeaderText: { ...typography.captionStrong, color: colors.textOnPrimary, textAlign: 'center' },
+  cellBodyText: { ...typography.caption, color: colors.textPrimary, textAlign: 'center' },
   footer: { backgroundColor: colors.primary, padding: spacing.md },
   footerLabel: { ...typography.body, color: colors.textOnPrimary },
 });

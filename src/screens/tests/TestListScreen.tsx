@@ -267,7 +267,9 @@ const styles = StyleSheet.create({
   filterBarContent: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm },
   filterChip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
+    minHeight: 36,
+    justifyContent: 'center',
     borderRadius: radius.pill,
     marginRight: spacing.sm,
   },
