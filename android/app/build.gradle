@@ -106,7 +106,7 @@ android {
         applicationId "com.KlesPrescription"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10
+        versionCode 12
         versionName "3.0"
     }
     signingConfigs {
