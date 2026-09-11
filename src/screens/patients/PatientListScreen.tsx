@@ -49,6 +49,9 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
 
   // Class/Ward/Floor filter — mirrors PatientFilterPopup: pick a distinct value from
   // whichever field, filter the list down to matching rows. "All" clears it.
+  // `modalKind` is only which popup is currently open; `filterKind`/`filterValue`
+  // is the actually-applied filter and must survive the popup closing.
+  const [modalKind, setModalKind] = useState<FilterKind>(null);
   const [filterKind, setFilterKind] = useState<FilterKind>(null);
   const [filterValue, setFilterValue] = useState<string | null>(null);
 
@@ -79,18 +82,18 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
   }
 
   const filterOptions = useMemo(() => {
-    if (!filterKind) return [];
+    if (!modalKind) return [];
     const seen = new Set<string>();
     const opts: string[] = [];
     for (const p of patients) {
-      const v = fieldFor(filterKind, p);
+      const v = fieldFor(modalKind, p);
       if (v && !seen.has(v)) {
         seen.add(v);
         opts.push(v);
       }
     }
     return opts;
-  }, [patients, filterKind]);
+  }, [patients, modalKind]);
 
   const filtered = useMemo(() => {
     let list = patients;
@@ -150,7 +153,7 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
             style={styles.searchInput}
             containerStyle={styles.searchFieldContainer}
           />
-          <Text style={styles.countText}>{patients.length}</Text>
+          <Text style={styles.countText}>{filtered.length}</Text>
         </View>
       </View>
 
@@ -237,44 +240,44 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
           }}>
           <Text style={styles.filterBtnLabel}>All</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setFilterKind('class')}>
+        <TouchableOpacity style={styles.filterBtn} onPress={() => setModalKind('class')}>
           <Text style={styles.filterBtnLabel}>Class</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setFilterKind('ward')}>
+        <TouchableOpacity style={styles.filterBtn} onPress={() => setModalKind('ward')}>
           <Text style={styles.filterBtnLabel}>Ward</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setFilterKind('floor')}>
+        <TouchableOpacity style={styles.filterBtn} onPress={() => setModalKind('floor')}>
           <Text style={styles.filterBtnLabel}>Floor</Text>
         </TouchableOpacity>
       </View>
 
       <Modal
-        visible={!!filterKind}
+        visible={!!modalKind}
         transparent
         animationType="none"
-        onRequestClose={() => setFilterKind(null)}>
+        onRequestClose={() => setModalKind(null)}>
         <TouchableOpacity
           style={styles.modalBackdrop}
           activeOpacity={1}
-          onPress={() => setFilterKind(null)}>
+          onPress={() => setModalKind(null)}>
           {/* activeOpacity={1} + no-op onPress: claims the touch so taps inside
               the box don't fall through to the backdrop's dismiss handler. */}
           <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalBox}>
             <View style={styles.modalHeaderRow}>
               <View style={styles.modalHeaderLeft}>
                 <View style={styles.modalIconBadge}>
-                  <Icon name={filterKindIcon(filterKind)} size={20} color={colors.primary} />
+                  <Icon name={filterKindIcon(modalKind)} size={20} color={colors.primary} />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>
-                    Filter by {filterKind === 'class' ? 'Class' : filterKind === 'ward' ? 'Ward' : 'Floor'}
+                    Filter by {modalKind === 'class' ? 'Class' : modalKind === 'ward' ? 'Ward' : 'Floor'}
                   </Text>
                   <Text style={styles.modalSubtitle}>
                     {filterOptions.length} option{filterOptions.length === 1 ? '' : 's'} available
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => setFilterKind(null)} hitSlop={8} style={styles.modalCloseBtn}>
+              <TouchableOpacity onPress={() => setModalKind(null)} hitSlop={8} style={styles.modalCloseBtn}>
                 <Icon name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -292,8 +295,9 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                     style={[styles.filterOptionRow, selected && styles.filterOptionRowSelected]}
                     activeOpacity={0.7}
                     onPress={() => {
+                      setFilterKind(modalKind);
                       setFilterValue(item);
-                      setFilterKind(null);
+                      setModalKind(null);
                     }}>
                     <Icon
                       name={selected ? 'radiobox-marked' : 'radiobox-blank'}
@@ -313,6 +317,7 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
               onPress={() => {
                 setFilterKind(null);
                 setFilterValue(null);
+                setModalKind(null);
               }}>
               <Icon name="filter-remove-outline" size={16} color={colors.primary} />
               <Text style={styles.modalClearBtnLabel}>Clear filter</Text>
