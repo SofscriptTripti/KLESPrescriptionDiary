@@ -15,6 +15,7 @@ import { colors, radius, shadow, spacing, typography } from '../../theme';
 import { getPatientList } from '../../api/services/patients';
 import { getUser, setMode } from '../../storage/session';
 import { patientTypeRoute } from '../../navigation/patientType';
+import { simplifyAge } from '../../utils/age';
 import type { RootScreenProps } from '../../navigation/types';
 import type { PatientModel, User } from '../../types/models';
 
@@ -174,7 +175,7 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                     {item.PATIENT_NAME}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
-                    {item.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, {item.PATIENT_AGE}
+                    {item.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, {simplifyAge(item.PATIENT_AGE)}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
                     Ward: {item.PATIENT_WARDNO} · Bed: {item.PATIENT_BEDNO} · Floor: {item.PATIENT_FLOOR}

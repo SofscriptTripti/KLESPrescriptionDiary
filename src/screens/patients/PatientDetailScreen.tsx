@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Screen, AppHeader, Card, GenderAvatar } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getMode } from '../../storage/session';
+import { simplifyAge } from '../../utils/age';
 import type { RootScreenProps, RootStackParamList } from '../../navigation/types';
 
 interface ModuleTile {
@@ -73,7 +74,7 @@ export function PatientDetailScreen({ navigation, route }: RootScreenProps<'Pati
     <Screen edges={['top', 'left', 'right']}>
       <AppHeader
         title={patient.PATIENT_NAME}
-        subtitle={`${patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, ${patient.PATIENT_AGE}`}
+        subtitle={`${patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, ${simplifyAge(patient.PATIENT_AGE)}`}
         avatar={<GenderAvatar gender={patient.PATIENT_GENDER} size={40} />}
         onBack={() => navigation.goBack()}
         right={
@@ -140,7 +141,7 @@ export function PatientDetailScreen({ navigation, route }: RootScreenProps<'Pati
             <InfoField label="Adm Date" value={formatAdmDate(patient.PATIENT_ADMSDATE)} />
             <InfoField
               label="Gender/Age"
-              value={`${patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, ${patient.PATIENT_AGE}`}
+              value={`${patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, ${simplifyAge(patient.PATIENT_AGE)}`}
             />
           </View>
         </Card>

@@ -216,18 +216,31 @@ export function VitalSignsScreen({ navigation, route }: RootScreenProps<'VitalSi
         <Button label="Save" onPress={handleSave} loading={saving} disabled={rows.length === 0} />
       </View>
 
-      {/* Matches the Teal "Observation" / "Data Representation" column header. */}
-      <View style={styles.tableHeader}>
-        <Text style={[styles.tableHeaderLabel, styles.colObs]}>Observation</Text>
-        <Text style={[styles.tableHeaderLabel, styles.colData]}>Data Representation</Text>
-      </View>
+      {/* Matches the Teal "Observation" / "Data Representation" column header —
+          hidden when there's nothing to show a header for. */}
+      {rows.length > 0 ? (
+        <View style={styles.tableHeader}>
+          <Text style={[styles.tableHeaderLabel, styles.colObs]}>Observation</Text>
+          <Text style={[styles.tableHeaderLabel, styles.colData]}>Data Representation</Text>
+        </View>
+      ) : null}
 
       <FlatList
         data={rows}
         keyExtractor={item => item.name}
         contentContainerStyle={[styles.list, rows.length === 0 && styles.emptyContainer]}
         ListEmptyComponent={
-          !loading ? <EmptyState icon="heart-pulse" title="No Records Found" /> : undefined
+          !loading ? (
+            <EmptyState
+              icon="heart-pulse"
+              title="No Observation or Data Available"
+              subtitle={
+                obsTypes.length > 0
+                  ? 'Try selecting a different observation type.'
+                  : 'No observation types are configured for this patient.'
+              }
+            />
+          ) : undefined
         }
         renderItem={({ item }) => (
           <Card style={styles.card}>
