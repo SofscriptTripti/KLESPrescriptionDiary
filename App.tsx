@@ -17,6 +17,10 @@ function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        {/* This RN version (edge-to-edge enforced on Android) removed
+            StatusBar's backgroundColor/translucent props entirely — the status
+            bar is always transparent now. The grey backdrop behind its icons
+            is painted by Screen.tsx's top safe-area strip instead. */}
         <StatusBar barStyle="light-content" />
         <NavigationContainer>
           <RootNavigator />

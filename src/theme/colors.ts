@@ -32,6 +32,11 @@ export const colors = {
   overlay: 'rgba(15, 23, 42, 0.45)',
   white: '#FFFFFF',
   black: '#000000',
+
+  // Backdrop painted behind the (Android edge-to-edge, always-transparent)
+  // status bar — see Screen.tsx. Grey rather than white/background so its
+  // icons stay visible whether a given device renders them black or white.
+  statusBar: '#64748B',
 } as const;
 
 export type ColorToken = keyof typeof colors;

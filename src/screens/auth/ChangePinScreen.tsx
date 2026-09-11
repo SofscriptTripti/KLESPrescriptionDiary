@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { Screen, AppHeader, Button, Card, TextField, LoadingOverlay } from '../../components';
 import { spacing } from '../../theme';
 import { getDeviceId } from '../../utils/deviceId';
@@ -76,41 +76,44 @@ export function ChangePinScreen({ navigation }: RootScreenProps<'ChangePin'>) {
   return (
     <Screen>
       <AppHeader title="Change PIN" onBack={() => navigation.goBack()} />
-      <View style={styles.form}>
-        <Card style={styles.card}>
-          <TextField
-            label="Old PIN"
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={4}
-            value={oldPin}
-            onChangeText={setOldPin}
-          />
-          <TextField
-            label="New PIN"
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={4}
-            value={newPin}
-            onChangeText={setNewPin}
-          />
-          <TextField
-            label="Confirm new PIN"
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={4}
-            value={confirmPin}
-            onChangeText={setConfirmPin}
-          />
-          <Button label="Update PIN" onPress={handleSubmit} loading={loading} fullWidth />
-        </Card>
-      </View>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+          <Card style={styles.card}>
+            <TextField
+              label="Old PIN"
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+              value={oldPin}
+              onChangeText={setOldPin}
+            />
+            <TextField
+              label="New PIN"
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+              value={newPin}
+              onChangeText={setNewPin}
+            />
+            <TextField
+              label="Confirm new PIN"
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+              value={confirmPin}
+              onChangeText={setConfirmPin}
+            />
+            <Button label="Update PIN" onPress={handleSubmit} loading={loading} fullWidth />
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <LoadingOverlay visible={loading} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  form: { padding: spacing.lg },
+  flex: { flex: 1 },
+  form: { padding: spacing.lg, flexGrow: 1 },
   card: { padding: spacing.xl },
 });

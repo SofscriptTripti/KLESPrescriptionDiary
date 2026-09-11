@@ -119,6 +119,23 @@ export function TestDetailsScreen({ navigation, route }: RootScreenProps<'TestDe
   const pivot = useMemo(() => buildPivot(components), [components]);
   const isEmpty = components.length === 0;
 
+  /** Mirrors TestDetailsPage.xaml.cs's ShowGraphPage(): builds the trend
+   * points straight from the already-fetched component list, no extra API call. */
+  function openGraph(row: PivotRow) {
+    const info = pivot.compInfo(row.compCd);
+    const points = components
+      .filter(c => c.COMPCD === row.compCd)
+      .map(c => ({ label: formatShortDate(c.CREATEDT), value: Number(c.VALUE) || 0 }));
+    navigation.navigate('TestGraph', {
+      patient,
+      dept: info?.CHRGDESC ?? '',
+      component: row.compName,
+      min: Number(info?.NRMLVALL) || 0,
+      max: Number(info?.NRMLVALH) || 0,
+      points,
+    });
+  }
+
   return (
     <Screen>
       <AppHeader
@@ -145,13 +162,15 @@ export function TestDetailsScreen({ navigation, route }: RootScreenProps<'TestDe
                 </Text>
               </View>
               {pivot.rows.map(row => (
-                <View
+                <TouchableOpacity
                   key={row.compCd}
+                  activeOpacity={0.7}
+                  onPress={() => openGraph(row)}
                   style={[styles.cell, styles.cellBody, { width: NAME_COL_WIDTH, minHeight: ROW_MIN_HEIGHT }]}>
-                  <Text style={styles.cellBodyTextBold} numberOfLines={2}>
+                  <Text style={[styles.cellBodyTextBold, styles.cellBodyLink]} numberOfLines={2}>
                     {row.compName}
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
 
@@ -259,5 +278,6 @@ const styles = StyleSheet.create({
   cellHeaderText: { ...typography.captionStrong, color: colors.textOnPrimary, textAlign: 'center' },
   cellBodyText: { ...typography.caption, color: colors.textPrimary, textAlign: 'center' },
   cellBodyTextBold: { ...typography.captionStrong, color: colors.textPrimary, textAlign: 'center' },
+  cellBodyLink: { color: colors.primary, textDecorationLine: 'underline' },
   cellDangerText: { color: colors.danger, fontWeight: '700' },
 });

@@ -18,6 +18,7 @@ import { VitalSignsScreen } from '../screens/vitals/VitalSignsScreen';
 import { TestListScreen } from '../screens/tests/TestListScreen';
 import { TestDetailsScreen } from '../screens/tests/TestDetailsScreen';
 import { TestMicroResultsScreen } from '../screens/tests/TestMicroResultsScreen';
+import { TestGraphScreen } from '../screens/tests/TestGraphScreen';
 import { NewTestRequestScreen } from '../screens/tests/NewTestRequestScreen';
 
 import { MedicineListScreen } from '../screens/medicines/MedicineListScreen';
@@ -79,6 +80,7 @@ export function RootNavigator() {
       <Stack.Screen name="TestList" component={TestListScreen} />
       <Stack.Screen name="TestDetails" component={TestDetailsScreen} />
       <Stack.Screen name="TestMicroResults" component={TestMicroResultsScreen} />
+      <Stack.Screen name="TestGraph" component={TestGraphScreen} />
       <Stack.Screen name="NewTestRequest" component={NewTestRequestScreen} />
 
       <Stack.Screen name="MedicineList" component={MedicineListScreen} />

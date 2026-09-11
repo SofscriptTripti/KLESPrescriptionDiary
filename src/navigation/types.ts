@@ -27,6 +27,16 @@ export type RootStackParamList = {
   // LABRPTTYP "L"/"M" rows route here instead of TestDetails — see TestListScreen.xaml.cs's
   // Handle_ItemTapped and TestMicroResultsPage.xaml.cs.
   TestMicroResults: { test: TestsModel };
+  // Tapping a component name in TestDetails' grid opens this — mirrors
+  // TestDetailsPage.xaml.cs's ShowGraphPage()/GraphPage.xaml.cs.
+  TestGraph: {
+    patient: PatientModel;
+    dept: string;
+    component: string;
+    min: number;
+    max: number;
+    points: { label: string; value: number }[];
+  };
   NewTestRequest: { patient: PatientModel };
 
   MedicineList: { patient: PatientModel };

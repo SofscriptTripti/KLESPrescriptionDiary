@@ -90,25 +90,33 @@ export function PatientDetailScreen({ navigation, route }: RootScreenProps<'Pati
             style={styles.contactBtn}
             onPress={() => open(`tel:${patient.PATIENT_MOBILE}`, 'Call')}>
             <Icon name="phone-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel}>Call</Text>
+            <Text style={styles.contactLabel} numberOfLines={1}>
+              Call
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.contactBtn}
             onPress={() => open(`sms:${patient.PATIENT_MOBILE}`, 'SMS')}>
             <Icon name="message-text-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel}>SMS</Text>
+            <Text style={styles.contactLabel} numberOfLines={1}>
+              SMS
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.contactBtn}
             onPress={() => open(`https://wa.me/${waNumber(patient.PATIENT_MOBILE)}`, 'WhatsApp')}>
             <Icon name="whatsapp" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel}>WhatsApp</Text>
+            <Text style={styles.contactLabel} numberOfLines={1}>
+              WhatsApp
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.contactBtn}
             onPress={() => open(`mailto:${patient.PATIENT_EMAIL}`, 'Email')}>
             <Icon name="email-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel}>Email</Text>
+            <Text style={styles.contactLabel} numberOfLines={1}>
+              Email
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -185,6 +193,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: radius.sm,
     paddingVertical: spacing.sm,
+    // Explicit left/right padding so the longest label ("WhatsApp") never
+    // touches the button edge on narrow screens.
+    paddingHorizontal: spacing.xs,
   },
   contactLabel: { ...typography.caption, color: colors.textOnPrimary },
   infoCard: { padding: spacing.md },
