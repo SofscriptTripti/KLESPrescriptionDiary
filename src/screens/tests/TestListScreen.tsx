@@ -10,7 +10,13 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, LoadingOverlay, EmptyState, Card } from '../../components';
+import {
+  Screen,
+  AppHeader,
+  LoadingOverlay,
+  EmptyState,
+  Card,
+} from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getTestList } from '../../api/services/tests';
 import { getMode } from '../../storage/session';
@@ -33,7 +39,11 @@ const STATUS_META: Record<number, StatusMeta> = {
   4: { label: 'Reported', color: colors.success, bg: colors.successLight },
   5: { label: 'Authorised', color: colors.success, bg: colors.successLight },
   6: { label: 'Other', color: colors.textMuted, bg: colors.surfaceAlt },
-  10: { label: 'Result Received', color: colors.success, bg: colors.successLight },
+  10: {
+    label: 'Result Received',
+    color: colors.success,
+    bg: colors.successLight,
+  },
 };
 
 function statusMeta(status: TestStatus): StatusMeta {
@@ -59,40 +69,57 @@ const STATUS_FILTERS: { status: TestStatus | null; label: string }[] = [
  * report-flagged test ("TestFlg" == "r") opens the resolved report file instead
  * of the component-detail screen. */
 function isReportTest(item: TestsModel): boolean {
-  return (item.TestFlg ?? '').toLowerCase().trim() === 'r' && !!item.RadiologyRptPath;
+  return (
+    (item.TestFlg ?? '').toLowerCase().trim() === 'r' && !!item.RadiologyRptPath
+  );
 }
 
 function formatDate(value?: string): string {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  const datePart = date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-  const timePart = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const datePart = date.toLocaleDateString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+  const timePart = date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   return `${datePart}, ${timePart}`;
 }
 
-export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'>) {
+export function TestListScreen({
+  navigation,
+  route,
+}: RootScreenProps<'TestList'>) {
   const { patient } = route.params;
   const [tests, setTests] = useState<TestsModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<TestStatus | null>(null);
 
-  const load = useCallback(async (isRefresh = false) => {
-    isRefresh ? setRefreshing(true) : setLoading(true);
-    try {
-      const mode = await getMode();
-      const list = await getTestList(patient, mode);
-      const sorted = [...list].sort(
-        (a, b) => new Date(b.TESTORDDATE).getTime() - new Date(a.TESTORDDATE).getTime(),
-      );
-      setTests(sorted);
-    } catch {
-      Alert.alert('Error', 'Failed to load tests');
-    } finally {
-      isRefresh ? setRefreshing(false) : setLoading(false);
-    }
-  }, [patient]);
+  const load = useCallback(
+    async (isRefresh = false) => {
+      isRefresh ? setRefreshing(true) : setLoading(true);
+      try {
+        const mode = await getMode();
+        const list = await getTestList(patient, mode);
+        const sorted = [...list].sort(
+          (a, b) =>
+            new Date(b.TESTORDDATE).getTime() -
+            new Date(a.TESTORDDATE).getTime(),
+        );
+        setTests(sorted);
+      } catch {
+        Alert.alert('Error', 'Failed to load tests');
+      } finally {
+        isRefresh ? setRefreshing(false) : setLoading(false);
+      }
+    },
+    [patient],
+  );
 
   useEffect(() => {
     load();
@@ -103,7 +130,10 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
   // back from the API as a numeric string (e.g. "5") rather than a number, so
   // compare numerically instead of with strict equality.
   const filteredTests = useMemo(
-    () => (activeFilter == null ? tests : tests.filter(t => Number(t.TESTSTATUS) === activeFilter)),
+    () =>
+      activeFilter == null
+        ? tests
+        : tests.filter(t => Number(t.TESTSTATUS) === activeFilter),
     [tests, activeFilter],
   );
   const isEmpty = useMemo(() => filteredTests.length === 0, [filteredTests]);
@@ -115,7 +145,11 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
         subtitle={patient.PATIENT_NAME}
         onBack={() => navigation.goBack()}
         right={
-          <TouchableOpacity style={styles.headerBtn} onPress={() => load()} hitSlop={8}>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => load()}
+            hitSlop={8}
+          >
             <Icon name="refresh" size={22} color={colors.textOnPrimary} />
           </TouchableOpacity>
         }
@@ -125,7 +159,8 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.filterBar}
-        contentContainerStyle={styles.filterBarContent}>
+        contentContainerStyle={styles.filterBarContent}
+      >
         {STATUS_FILTERS.map(filter => {
           const meta = filter.status == null ? null : statusMeta(filter.status);
           const isActive = activeFilter === filter.status;
@@ -136,15 +171,23 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
               style={[
                 styles.filterChip,
                 { backgroundColor: meta ? meta.bg : colors.surfaceAlt },
-                isActive && { backgroundColor: meta ? meta.color : colors.primary },
+                isActive && {
+                  backgroundColor: meta ? meta.color : colors.primary,
+                },
               ]}
-              onPress={() => setActiveFilter(current => (current === filter.status ? null : filter.status))}>
+              onPress={() =>
+                setActiveFilter(current =>
+                  current === filter.status ? null : filter.status,
+                )
+              }
+            >
               <Text
                 style={[
                   styles.filterChipLabel,
                   { color: meta ? meta.color : colors.textSecondary },
                   isActive && styles.filterChipLabelActive,
-                ]}>
+                ]}
+              >
                 {filter.label}
               </Text>
             </TouchableOpacity>
@@ -153,15 +196,27 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
       </ScrollView>
 
       <FlatList
+        style={styles.flatList}
         data={filteredTests}
-        keyExtractor={(item, index) => `${item.LABNO}-${item.TESTCD}-${item.CHRGCD}-${index}`}
+        keyExtractor={(item, index) =>
+          `${item.LABNO}-${item.TESTCD}-${item.CHRGCD}-${index}`
+        }
         contentContainerStyle={[styles.list, isEmpty && styles.emptyContainer]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => load(true)}
+          />
+        }
         ListEmptyComponent={
           !loading ? (
             <EmptyState
               icon="test-tube-empty"
-              title={activeFilter == null ? 'No tests found' : 'No tests match this filter'}
+              title={
+                activeFilter == null
+                  ? 'No tests found'
+                  : 'No tests match this filter'
+              }
               subtitle={
                 activeFilter == null
                   ? 'Pull down to refresh or request a new test.'
@@ -221,7 +276,9 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
                       other status still shows its badge normally. */}
                   {item.TESTSTATUS !== 5 ? (
                     <View style={[styles.badge, { backgroundColor: meta.bg }]}>
-                      <Text style={[styles.badgeLabel, { color: meta.color }]}>{meta.label}</Text>
+                      <Text style={[styles.badgeLabel, { color: meta.color }]}>
+                        {meta.label}
+                      </Text>
                     </View>
                   ) : null}
                 </View>
@@ -236,7 +293,8 @@ export function TestListScreen({ navigation, route }: RootScreenProps<'TestList'
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.85}
-        onPress={() => navigation.navigate('NewTestRequest', { patient })}>
+        onPress={() => navigation.navigate('NewTestRequest', { patient })}
+      >
         <Icon name="plus" size={28} color={colors.textOnPrimary} />
       </TouchableOpacity>
 
@@ -263,14 +321,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
+  // flexGrow: 0 + flexShrink: 0 pins this bar to its own content-driven
+  // height so it (and its padding) can never get compressed by the flex
+  // layout in a shorter viewport, e.g. landscape after auto-rotate — that
+  // squishing is also why the FlatList below needs its own explicit flex: 1
+  // (a FlatList without one doesn't reliably bound/scroll itself, so the
+  // whole screen's content can end up fighting for the same space instead).
   filterBar: {
     flexGrow: 0,
+    flexShrink: 0,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     paddingBottom: spacing.sm,
   },
-  filterBarContent: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: spacing.sm },
+  filterBarContent: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
   filterChip: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -281,6 +350,7 @@ const styles = StyleSheet.create({
   },
   filterChipLabel: { ...typography.captionStrong, fontSize: 12 },
   filterChipLabelActive: { color: colors.textOnPrimary },
+  flatList: { flex: 1 },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   card: { marginBottom: spacing.md },
@@ -297,6 +367,10 @@ const styles = StyleSheet.create({
   info: { flex: 1, marginRight: spacing.sm },
   name: { ...typography.bodyStrong, color: colors.textPrimary },
   meta: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
-  badge: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.pill },
+  badge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
   badgeLabel: { ...typography.captionStrong, fontSize: 11 },
 });

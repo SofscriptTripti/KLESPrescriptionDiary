@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   Screen,
@@ -27,7 +35,9 @@ function resolveDocCd(user: User): number {
   return 0;
 }
 
-export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientList'>) {
+export function OPPatientListScreen({
+  navigation,
+}: RootScreenProps<'OPPatientList'>) {
   const [user, setLocalUser] = useState<User | null>(null);
   const [patients, setPatients] = useState<PatientModel[]>([]);
   const [query, setQuery] = useState('');
@@ -62,16 +72,22 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
 
   function call(mobile?: string) {
     if (!mobile) return;
-    Linking.openURL(`tel:${mobile}`).catch(() => Alert.alert('Call', 'Unable to make call'));
+    Linking.openURL(`tel:${mobile}`).catch(() =>
+      Alert.alert('Call', 'Unable to make call'),
+    );
   }
   function sms(mobile?: string) {
     if (!mobile) return;
-    Linking.openURL(`sms:${mobile}`).catch(() => Alert.alert('SMS', 'Unable to send SMS'));
+    Linking.openURL(`sms:${mobile}`).catch(() =>
+      Alert.alert('SMS', 'Unable to send SMS'),
+    );
   }
   // OPPatientListPage.xaml.cs's Handle_Tapped_1 opens `mailto:` (not WhatsApp, unlike the IP list).
   function email(address?: string) {
     if (!address) return;
-    Linking.openURL(`mailto:${address}`).catch(() => Alert.alert('Email', 'Unable to open email'));
+    Linking.openURL(`mailto:${address}`).catch(() =>
+      Alert.alert('Email', 'Unable to open email'),
+    );
   }
 
   async function openPatient(patient: PatientModel) {
@@ -92,8 +108,16 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
         subtitle={`${filtered.length} of ${patients.length}`}
         onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
         right={
-          <TouchableOpacity style={styles.headerBtn} onPress={() => setShowTypeModal(true)} hitSlop={8}>
-            <Icon name="account-switch" size={22} color={colors.textOnPrimary} />
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => setShowTypeModal(true)}
+            hitSlop={8}
+          >
+            <Icon
+              name="account-switch"
+              size={22}
+              color={colors.textOnPrimary}
+            />
           </TouchableOpacity>
         }
       />
@@ -107,11 +131,20 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
       </View>
 
       <FlatList
+        style={styles.flatList}
         data={filtered}
         keyExtractor={item => item.PRMNT_PATIENT_NO}
-        contentContainerStyle={[styles.list, filtered.length === 0 && styles.emptyContainer]}
+        contentContainerStyle={[
+          styles.list,
+          filtered.length === 0 && styles.emptyContainer,
+        ]}
         ListEmptyComponent={
-          !loading ? <EmptyState icon="account-search-outline" title="No patients found" /> : undefined
+          !loading ? (
+            <EmptyState
+              icon="account-search-outline"
+              title="No patients found"
+            />
+          ) : undefined
         }
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => openPatient(item)}>
@@ -123,7 +156,8 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
                     {item.PATIENT_NAME}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
-                    IP No: {item.PATIENT_ID} · Bed {item.PATIENT_BEDNO} · {item.PATIENT_WARDNO} · Floor {item.PATIENT_FLOOR}
+                    IP No: {item.PATIENT_ID} · Bed {item.PATIENT_BEDNO} ·{' '}
+                    {item.PATIENT_WARDNO} · Floor {item.PATIENT_FLOOR}
                   </Text>
                   {user?.UserTyp !== '1' ? (
                     <Text style={styles.meta} numberOfLines={1}>
@@ -133,13 +167,26 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
                 </View>
               </View>
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => call(item.PATIENT_MOBILE)}>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => call(item.PATIENT_MOBILE)}
+                >
                   <Icon name="phone-outline" size={18} color={colors.primary} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => sms(item.PATIENT_MOBILE)}>
-                  <Icon name="message-text-outline" size={18} color={colors.primary} />
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => sms(item.PATIENT_MOBILE)}
+                >
+                  <Icon
+                    name="message-text-outline"
+                    size={18}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => email(item.PATIENT_EMAIL)}>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => email(item.PATIENT_EMAIL)}
+                >
                   <Icon name="email-outline" size={18} color={colors.accent} />
                 </TouchableOpacity>
               </View>
@@ -159,7 +206,12 @@ export function OPPatientListScreen({ navigation }: RootScreenProps<'OPPatientLi
 
 const styles = StyleSheet.create({
   headerBtn: { padding: spacing.xs },
-  searchWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  searchWrap: {
+    flexShrink: 0,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  flatList: { flex: 1 },
   searchInput: { marginBottom: 0 },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },

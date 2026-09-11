@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Screen, AppHeader, Card, GenderAvatar } from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import { getMode } from '../../storage/session';
 import { simplifyAge } from '../../utils/age';
-import type { RootScreenProps, RootStackParamList } from '../../navigation/types';
+import type {
+  RootScreenProps,
+  RootStackParamList,
+} from '../../navigation/types';
 
 interface ModuleTile {
   key: string;
@@ -20,9 +31,19 @@ interface ModuleTile {
 // XAML. All three stay off per instruction, commented out rather than deleted —
 // Pending Request was briefly re-enabled and then asked to be removed again.
 const IP_MODULES: ModuleTile[] = [
-  { key: 'vitals', icon: 'heart-pulse', title: 'Vital Signs', route: 'VitalSigns' },
+  {
+    key: 'vitals',
+    icon: 'heart-pulse',
+    title: 'Vital Signs',
+    route: 'VitalSigns',
+  },
   { key: 'tests', icon: 'test-tube', title: 'Tests', route: 'TestList' },
-  { key: 'prescription', icon: 'pill', title: 'Prescription', route: 'MedicineList' },
+  {
+    key: 'prescription',
+    icon: 'pill',
+    title: 'Prescription',
+    route: 'MedicineList',
+  },
   // { key: 'pending', icon: 'clock-alert-outline', title: 'Pending Request', route: 'PendingRequest' },
   // { key: 'diet', icon: 'food-apple-outline', title: 'Diet', route: 'DietList' },
   // { key: 'notes', icon: 'note-text-outline', title: "Doctor's Notes", route: 'Notes' },
@@ -31,10 +52,25 @@ const IP_MODULES: ModuleTile[] = [
 // OPPatientDetailPage's own button set (Tests/Vitals/Prescription/AdmissionList/Notes) —
 // Notes commented out for the same reason as above.
 const OP_MODULES: ModuleTile[] = [
-  { key: 'vitals', icon: 'heart-pulse', title: 'Vital Signs', route: 'VitalSigns' },
+  {
+    key: 'vitals',
+    icon: 'heart-pulse',
+    title: 'Vital Signs',
+    route: 'VitalSigns',
+  },
   { key: 'tests', icon: 'test-tube', title: 'Tests', route: 'TestList' },
-  { key: 'prescription', icon: 'pill', title: 'Prescription', route: 'MedicineList' },
-  { key: 'admission', icon: 'history', title: 'Admission History', route: 'AdmissionList' },
+  {
+    key: 'prescription',
+    icon: 'pill',
+    title: 'Prescription',
+    route: 'MedicineList',
+  },
+  {
+    key: 'admission',
+    icon: 'history',
+    title: 'Admission History',
+    route: 'AdmissionList',
+  },
   // { key: 'notes', icon: 'note-text-outline', title: "Doctor's Notes", route: 'Notes' },
 ];
 
@@ -51,7 +87,10 @@ function formatAdmDate(value: string): string {
   return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
 }
 
-export function PatientDetailScreen({ navigation, route }: RootScreenProps<'PatientDetail'>) {
+export function PatientDetailScreen({
+  navigation,
+  route,
+}: RootScreenProps<'PatientDetail'>) {
   const { patient } = route.params;
   const [mode, setLocalMode] = useState<'ip' | 'op'>('ip');
 
@@ -62,7 +101,9 @@ export function PatientDetailScreen({ navigation, route }: RootScreenProps<'Pati
   const modules = mode === 'op' ? OP_MODULES : IP_MODULES;
 
   function open(url: string, label: string) {
-    Linking.openURL(url).catch(() => Alert.alert(label, `Unable to open ${label.toLowerCase()}`));
+    Linking.openURL(url).catch(() =>
+      Alert.alert(label, `Unable to open ${label.toLowerCase()}`),
+    );
   }
 
   function openRmo() {
@@ -74,7 +115,9 @@ export function PatientDetailScreen({ navigation, route }: RootScreenProps<'Pati
     <Screen edges={['top', 'left', 'right']}>
       <AppHeader
         title={patient.PATIENT_NAME}
-        subtitle={`${patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, ${simplifyAge(patient.PATIENT_AGE)}`}
+        subtitle={`${
+          patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'
+        }, ${simplifyAge(patient.PATIENT_AGE)}`}
         avatar={<GenderAvatar gender={patient.PATIENT_GENDER} size={40} />}
         onBack={() => navigation.goBack()}
         right={
@@ -85,84 +128,121 @@ export function PatientDetailScreen({ navigation, route }: RootScreenProps<'Pati
         }
       />
 
-      <View style={styles.summary}>
-        <View style={styles.contactRow}>
-          <TouchableOpacity
-            style={styles.contactBtn}
-            onPress={() => open(`tel:${patient.PATIENT_MOBILE}`, 'Call')}>
-            <Icon name="phone-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel} numberOfLines={1}>
-              Call
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.contactBtn}
-            onPress={() => open(`sms:${patient.PATIENT_MOBILE}`, 'SMS')}>
-            <Icon name="message-text-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel} numberOfLines={1}>
-              SMS
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.contactBtn}
-            onPress={() => open(`https://wa.me/${waNumber(patient.PATIENT_MOBILE)}`, 'WhatsApp')}>
-            <Icon name="whatsapp" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel} numberOfLines={1}>
-              WhatsApp
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.contactBtn}
-            onPress={() => open(`mailto:${patient.PATIENT_EMAIL}`, 'Email')}>
-            <Icon name="email-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.contactLabel} numberOfLines={1}>
-              Email
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {/* The whole body scrolls — without this, a shorter viewport (e.g.
+          landscape after auto-rotate) could clip the module grid below with
+          no way to reach it, since nothing here was scrollable before. */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.summary}>
+          <View style={styles.contactRow}>
+            {/* Call/SMS get less flex than before — freeing up room for
+                WhatsApp, whose label is the longest and was getting cramped
+                on small screens when every button had equal width. */}
+            <TouchableOpacity
+              style={[styles.contactBtn, styles.contactBtnCompact]}
+              onPress={() => open(`tel:${patient.PATIENT_MOBILE}`, 'Call')}
+            >
+              <Icon
+                name="phone-outline"
+                size={18}
+                color={colors.textOnPrimary}
+              />
+              <Text style={styles.contactLabel} numberOfLines={1}>
+                Call
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.contactBtn, styles.contactBtnCompact]}
+              onPress={() => open(`sms:${patient.PATIENT_MOBILE}`, 'SMS')}
+            >
+              <Icon
+                name="message-text-outline"
+                size={18}
+                color={colors.textOnPrimary}
+              />
+              <Text style={styles.contactLabel} numberOfLines={1}>
+                SMS
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.contactBtn, styles.contactBtnWide]}
+              onPress={() =>
+                open(
+                  `https://wa.me/${waNumber(patient.PATIENT_MOBILE)}`,
+                  'WhatsApp',
+                )
+              }
+            >
+              <Icon name="whatsapp" size={18} color={colors.textOnPrimary} />
+              <Text style={styles.contactLabel} numberOfLines={1}>
+                WhatsApp
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.contactBtn}
+              onPress={() => open(`mailto:${patient.PATIENT_EMAIL}`, 'Email')}
+            >
+              <Icon
+                name="email-outline"
+                size={18}
+                color={colors.textOnPrimary}
+              />
+              <Text style={styles.contactLabel} numberOfLines={1}>
+                Email
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Based on PatientDetailPage.xaml's info Frame, with Bed/Floor split into
+          {/* Based on PatientDetailPage.xaml's info Frame, with Bed/Floor split into
             separate fields (the original combines them into one "Bed/Flr" label)
             and Gender/Age added alongside. */}
-        <Card style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <InfoField label="Reg. No" value={patient.PRMNT_PATIENT_NO} />
-            <InfoField label="IP No" value={patient.PATIENT_ID} />
-          </View>
-          <View style={styles.infoRow}>
-            <InfoField label="Ward" value={patient.PATIENT_WARDNO} />
-            <InfoField label="Bed" value={patient.PATIENT_BEDNO} />
-          </View>
-          <View style={styles.infoRow}>
-            <InfoField label="Floor" value={patient.PATIENT_FLOOR} />
-            <InfoField label="Class" value={patient.PATIENT_CLASS} />
-          </View>
-          <View style={styles.infoRow}>
-            <InfoField label="Adm Date" value={formatAdmDate(patient.PATIENT_ADMSDATE)} />
-            <InfoField
-              label="Gender/Age"
-              value={`${patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, ${simplifyAge(patient.PATIENT_AGE)}`}
-            />
-          </View>
-        </Card>
-      </View>
+          <Card style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <InfoField label="Reg. No" value={patient.PRMNT_PATIENT_NO} />
+              <InfoField label="IP No" value={patient.PATIENT_ID} />
+            </View>
+            <View style={styles.infoRow}>
+              <InfoField label="Ward" value={patient.PATIENT_WARDNO} />
+              <InfoField label="Bed" value={patient.PATIENT_BEDNO} />
+            </View>
+            <View style={styles.infoRow}>
+              <InfoField label="Floor" value={patient.PATIENT_FLOOR} />
+              <InfoField label="Class" value={patient.PATIENT_CLASS} />
+            </View>
+            <View style={styles.infoRow}>
+              <InfoField
+                label="Adm Date"
+                value={formatAdmDate(patient.PATIENT_ADMSDATE)}
+              />
+              <InfoField
+                label="Gender/Age"
+                value={`${
+                  patient.PATIENT_GENDER === 'M' ? 'Male' : 'Female'
+                }, ${simplifyAge(patient.PATIENT_AGE)}`}
+              />
+            </View>
+          </Card>
+        </View>
 
-      <View style={styles.grid}>
-        {modules.map(m => (
-          <TouchableOpacity
-            key={m.key}
-            style={styles.moduleWrap}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate(m.route as any, { patient } as any)}>
-            <Card style={styles.moduleCard}>
-              <View style={styles.moduleIcon}>
-                <Icon name={m.icon} size={26} color={colors.primary} />
-              </View>
-              <Text style={styles.moduleTitle}>{m.title}</Text>
-            </Card>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={styles.grid}>
+          {modules.map(m => (
+            <TouchableOpacity
+              key={m.key}
+              style={styles.moduleWrap}
+              activeOpacity={0.8}
+              onPress={() =>
+                navigation.navigate(m.route as any, { patient } as any)
+              }
+            >
+              <Card style={styles.moduleCard}>
+                <View style={styles.moduleIcon}>
+                  <Icon name={m.icon} size={26} color={colors.primary} />
+                </View>
+                <Text style={styles.moduleTitle}>{m.title}</Text>
+              </Card>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
@@ -178,13 +258,18 @@ function InfoField({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   headerBtn: { padding: spacing.xs },
+  scrollContent: { flexGrow: 1 },
   summary: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
   },
-  contactRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  contactRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
   contactBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -198,12 +283,25 @@ const styles = StyleSheet.create({
     // touches the button edge on narrow screens.
     paddingHorizontal: spacing.xs,
   },
+  // Call/SMS (short labels) give up some of their share of the row so
+  // WhatsApp (the longest label) gets more breathing room.
+  contactBtnCompact: { flex: 0.8 },
+  contactBtnWide: { flex: 1.4 },
   contactLabel: { ...typography.caption, color: colors.textOnPrimary },
   infoCard: { padding: spacing.md },
-  infoRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.sm },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.sm,
+  },
   infoField: { flex: 1, flexDirection: 'column' },
   infoLabel: { ...typography.captionStrong, color: colors.primary },
-  infoValue: { ...typography.captionStrong, color: colors.textPrimary, marginTop: 2, paddingRight: spacing.sm },
+  infoValue: {
+    ...typography.captionStrong,
+    color: colors.textPrimary,
+    marginTop: 2,
+    paddingRight: spacing.sm,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

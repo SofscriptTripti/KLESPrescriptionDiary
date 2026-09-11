@@ -1,7 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Screen, AppHeader, Button, TextField, Card, LoadingOverlay, EmptyState } from '../../components';
+import {
+  Screen,
+  AppHeader,
+  Button,
+  TextField,
+  Card,
+  LoadingOverlay,
+  EmptyState,
+} from '../../components';
 import { colors, radius, spacing, typography } from '../../theme';
 import {
   getDosageDescList,
@@ -36,7 +52,10 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'ConfirmMedRequest'>) {
+export function ConfirmMedRequestScreen({
+  navigation,
+  route,
+}: RootScreenProps<'ConfirmMedRequest'>) {
   const { patient, selected } = route.params;
 
   const [freqList, setFreqList] = useState<FrequencyModel[]>([]);
@@ -45,7 +64,10 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [picker, setPicker] = useState<{ index: number; field: PickerField } | null>(null);
+  const [picker, setPicker] = useState<{
+    index: number;
+    field: PickerField;
+  } | null>(null);
 
   useEffect(() => {
     load();
@@ -58,7 +80,8 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
   // checked on the medicine picker when the user leaves without saving.
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', e => {
-      if (e.data.action.type !== 'GO_BACK' && e.data.action.type !== 'POP') return;
+      if (e.data.action.type !== 'GO_BACK' && e.data.action.type !== 'POP')
+        return;
       e.preventDefault();
       navigation.navigate(
         'NewMedicineRequest',
@@ -99,7 +122,9 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
   }
 
   function updateDraft(index: number, patch: Partial<DraftItem>) {
-    setDrafts(prev => prev.map((d, i) => (i === index ? { ...d, ...patch } : d)));
+    setDrafts(prev =>
+      prev.map((d, i) => (i === index ? { ...d, ...patch } : d)),
+    );
   }
 
   function removeDraft(index: number) {
@@ -108,8 +133,10 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
 
   function selectOption(optionIdx: number) {
     if (!picker) return;
-    if (picker.field === 'freq') updateDraft(picker.index, { freqIdx: optionIdx });
-    else if (picker.field === 'dosage') updateDraft(picker.index, { dosageIdx: optionIdx });
+    if (picker.field === 'freq')
+      updateDraft(picker.index, { freqIdx: optionIdx });
+    else if (picker.field === 'dosage')
+      updateDraft(picker.index, { dosageIdx: optionIdx });
     else updateDraft(picker.index, { routeIdx: optionIdx });
     setPicker(null);
   }
@@ -189,7 +216,10 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
       const ok = await insertMedicineOrder(payload);
       if (ok) {
         Alert.alert('Success', 'Medicine request submitted', [
-          { text: 'OK', onPress: () => navigation.navigate('MedicineList', { patient }) },
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('MedicineList', { patient }),
+          },
         ]);
       } else {
         Alert.alert('Error', 'Some error occurred. Try again');
@@ -209,7 +239,11 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
   }, [picker, freqList, dosageList, routeList]);
 
   const pickerTitle =
-    picker?.field === 'freq' ? 'Frequency' : picker?.field === 'dosage' ? 'Dosage' : 'Route of Admin';
+    picker?.field === 'freq'
+      ? 'Frequency'
+      : picker?.field === 'dosage'
+      ? 'Dosage'
+      : 'Route of Admin';
 
   function handleAddNew() {
     // Matches ConfirmNewMedRequestPage.xaml.cs's Handle_Clicked_1 ("Add New +"),
@@ -258,17 +292,25 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
       <View style={styles.summaryBar}>
         <Icon name="pill" size={18} color={colors.primary} />
         <Text style={styles.summaryText}>
-          {drafts.length} {drafts.length === 1 ? 'medicine' : 'medicines'} in this request
+          {drafts.length} {drafts.length === 1 ? 'medicine' : 'medicines'} in
+          this request
         </Text>
       </View>
 
       <FlatList
         data={drafts}
         keyExtractor={(d, idx) => `${d.med.item_cd}-${idx}`}
-        contentContainerStyle={[styles.list, drafts.length === 0 && styles.emptyContainer]}
+        contentContainerStyle={[
+          styles.list,
+          drafts.length === 0 && styles.emptyContainer,
+        ]}
         ListEmptyComponent={
           !loading ? (
-            <EmptyState icon="cart-off" title="Cart is empty" subtitle="Tap Add New to choose medicines" />
+            <EmptyState
+              icon="cart-off"
+              title="Cart is empty"
+              subtitle="Tap Add New to choose medicines"
+            />
           ) : undefined
         }
         renderItem={({ item, index }) => (
@@ -290,8 +332,13 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
               <TouchableOpacity
                 onPress={() => removeDraft(index)}
                 hitSlop={8}
-                style={styles.removeBtn}>
-                <Icon name="trash-can-outline" size={20} color={colors.danger} />
+                style={styles.removeBtn}
+              >
+                <Icon
+                  name="trash-can-outline"
+                  size={20}
+                  color={colors.danger}
+                />
               </TouchableOpacity>
             </View>
 
@@ -322,7 +369,9 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
                 placeholder="0"
                 keyboardType="numeric"
                 value={item.quantity}
-                onChangeText={v => updateDraft(index, { quantity: v.replace(/[^0-9]/g, '') })}
+                onChangeText={v =>
+                  updateDraft(index, { quantity: v.replace(/[^0-9]/g, '') })
+                }
                 style={styles.smallInput}
               />
               <TextField
@@ -330,7 +379,9 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
                 placeholder="0"
                 keyboardType="numeric"
                 value={item.days}
-                onChangeText={v => updateDraft(index, { days: v.replace(/[^0-9]/g, '') })}
+                onChangeText={v =>
+                  updateDraft(index, { days: v.replace(/[^0-9]/g, '') })
+                }
                 style={styles.smallInput}
               />
             </View>
@@ -349,8 +400,18 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
 
       <View style={styles.footer}>
         <View style={styles.footerRow}>
-          <Button label="Add New" variant="outline" onPress={handleAddNew} style={styles.footerBtn} />
-          <Button label="Save" onPress={handleSubmit} loading={submitting} style={styles.footerBtn} />
+          <Button
+            label="Add New"
+            variant="outline"
+            onPress={handleAddNew}
+            style={styles.footerBtn}
+          />
+          <Button
+            label="Save"
+            onPress={handleSubmit}
+            loading={submitting}
+            style={styles.footerBtn}
+          />
           <Button
             label="Cancel"
             variant="danger"
@@ -360,8 +421,24 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
         </View>
       </View>
 
-      <Modal visible={!!picker} transparent animationType="fade" onRequestClose={() => setPicker(null)}>
-        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setPicker(null)}>
+      <Modal
+        visible={!!picker}
+        transparent
+        animationType="fade"
+        // See PatientListScreen.tsx's filter Modal for why this matters on iOS.
+        supportedOrientations={[
+          'portrait',
+          'landscape-left',
+          'landscape-right',
+          'portrait-upside-down',
+        ]}
+        onRequestClose={() => setPicker(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setPicker(null)}
+        >
           <View style={styles.modalBox}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>{pickerTitle}</Text>
@@ -373,7 +450,10 @@ export function ConfirmMedRequestScreen({ navigation, route }: RootScreenProps<'
               data={pickerOptions}
               keyExtractor={(_, i) => String(i)}
               renderItem={({ item, index }) => (
-                <TouchableOpacity style={styles.modalOption} onPress={() => selectOption(index)}>
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => selectOption(index)}
+                >
                   <Text style={styles.modalOptionLabel}>{item}</Text>
                 </TouchableOpacity>
               )}
@@ -395,10 +475,17 @@ interface DropdownFieldProps {
 
 function DropdownField({ label, value, onPress }: DropdownFieldProps) {
   return (
-    <TouchableOpacity style={styles.dropdownField} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.dropdownField}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Text style={styles.dropdownLabel}>{label}</Text>
       <View style={styles.dropdownValueRow}>
-        <Text style={[styles.dropdownValue, !value && styles.dropdownPlaceholder]} numberOfLines={1}>
+        <Text
+          style={[styles.dropdownValue, !value && styles.dropdownPlaceholder]}
+          numberOfLines={1}
+        >
           {value ?? 'Select'}
         </Text>
         <Icon name="chevron-down" size={16} color={colors.textMuted} />
@@ -418,10 +505,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
   },
   summaryText: { ...typography.captionStrong, color: colors.primaryDark },
-  list: { padding: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
+  list: {
+    padding: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+  },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
   card: { marginBottom: spacing.lg },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
   indexBadge: {
     width: 24,
     height: 24,
@@ -431,18 +526,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 2,
   },
-  indexBadgeText: { ...typography.captionStrong, color: colors.textOnPrimary, fontSize: 12 },
+  indexBadgeText: {
+    ...typography.captionStrong,
+    color: colors.textOnPrimary,
+    fontSize: 12,
+  },
   cardTitleWrap: { flex: 1 },
   itemDesc: { ...typography.bodyStrong, color: colors.textPrimary },
   itemSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
   removeBtn: { padding: spacing.xs },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.md },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
+  },
   sectionLabel: {
     ...typography.label,
     color: colors.textMuted,
     marginBottom: spacing.sm,
   },
-  dropdownRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  dropdownRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
   dropdownField: {
     flex: 1,
     borderWidth: 1,
@@ -452,10 +559,26 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     backgroundColor: colors.surfaceAlt,
   },
-  dropdownLabel: { ...typography.label, color: colors.textMuted, marginBottom: 2 },
-  dropdownValueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
-  dropdownValue: { ...typography.captionStrong, color: colors.textPrimary, flexShrink: 1 },
-  dropdownPlaceholder: { color: colors.textMuted, fontFamily: typography.body.fontFamily },
+  dropdownLabel: {
+    ...typography.label,
+    color: colors.textMuted,
+    marginBottom: 2,
+  },
+  dropdownValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 4,
+  },
+  dropdownValue: {
+    ...typography.captionStrong,
+    color: colors.textPrimary,
+    flexShrink: 1,
+  },
+  dropdownPlaceholder: {
+    color: colors.textMuted,
+    fontFamily: typography.body.fontFamily,
+  },
   inputsRow: { flexDirection: 'row', gap: spacing.md },
   smallInput: { marginBottom: spacing.md },
   remarksInput: { minHeight: 64, textAlignVertical: 'top', marginBottom: 0 },

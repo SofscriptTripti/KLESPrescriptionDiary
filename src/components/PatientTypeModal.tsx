@@ -17,38 +17,90 @@ interface PatientTypeModalProps {
 /** Mirrors MainScreen.xaml's "IP List" / "OP List" buttons — the two
  * hardcoded options MAUI shows (RMO is a separate toolbar icon there, not a
  * third option here). */
-export function PatientTypeModal({ visible, onSelect, onDismiss }: PatientTypeModalProps) {
+export function PatientTypeModal({
+  visible,
+  onSelect,
+  onDismiss,
+}: PatientTypeModalProps) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => onDismiss?.()}>
-      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => onDismiss?.()}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      // Without this, iOS can present the modal still laid out for portrait
+      // when the device is already rotated to landscape (a known RN Modal
+      // quirk) — this tells it every orientation is fine so it always
+      // matches the screen underneath.
+      supportedOrientations={[
+        'portrait',
+        'landscape-left',
+        'landscape-right',
+        'portrait-upside-down',
+      ]}
+      onRequestClose={() => onDismiss?.()}
+    >
+      <TouchableOpacity
+        style={styles.backdrop}
+        activeOpacity={1}
+        onPress={() => onDismiss?.()}
+      >
         {/* activeOpacity={1} + no-op onPress: claims the touch so taps inside
             the box don't fall through to the backdrop's dismiss handler. */}
-        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.box}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => {}}
+          style={styles.box}
+        >
           {onDismiss ? (
-            <TouchableOpacity style={styles.closeBtn} activeOpacity={0.7} onPress={onDismiss} hitSlop={8}>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              activeOpacity={0.7}
+              onPress={onDismiss}
+              hitSlop={8}
+            >
               <Icon name="close" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           ) : null}
           <View style={styles.iconBadge}>
-            <Icon name="account-question-outline" size={28} color={colors.primary} />
+            <Icon
+              name="account-question-outline"
+              size={28}
+              color={colors.primary}
+            />
           </View>
           <Text style={styles.title}>Select Patient Type</Text>
-          <Text style={styles.subtitle}>Choose which patient list you want to open.</Text>
+          <Text style={styles.subtitle}>
+            Choose which patient list you want to open.
+          </Text>
 
-          <TouchableOpacity style={styles.option} activeOpacity={0.8} onPress={() => onSelect('ip')}>
+          <TouchableOpacity
+            style={styles.option}
+            activeOpacity={0.8}
+            onPress={() => onSelect('ip')}
+          >
             <View style={styles.optionIcon}>
               <Icon name="bed-outline" size={24} color={colors.primary} />
             </View>
             <View style={styles.optionText}>
               <Text style={styles.optionTitle}>IP Patient</Text>
-              <Text style={styles.optionSubtitle}>In-patient prescriptions & records</Text>
+              <Text style={styles.optionSubtitle}>
+                In-patient prescriptions & records
+              </Text>
             </View>
             <Icon name="chevron-right" size={22} color={colors.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.option} activeOpacity={0.8} onPress={() => onSelect('op')}>
+          <TouchableOpacity
+            style={styles.option}
+            activeOpacity={0.8}
+            onPress={() => onSelect('op')}
+          >
             <View style={styles.optionIcon}>
-              <Icon name="account-injury-outline" size={24} color={colors.primary} />
+              <Icon
+                name="account-injury-outline"
+                size={24}
+                color={colors.primary}
+              />
             </View>
             <View style={styles.optionText}>
               <Text style={styles.optionTitle}>OP Patient</Text>
@@ -128,5 +180,9 @@ const styles = StyleSheet.create({
   },
   optionText: { flex: 1 },
   optionTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-  optionSubtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  optionSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
 });

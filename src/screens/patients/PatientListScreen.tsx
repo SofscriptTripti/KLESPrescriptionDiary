@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Linking,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   Screen,
@@ -41,7 +50,10 @@ function ptnNoLabel(p: PatientModel): string {
   return `IP No: ${p.PATIENT_ID}   Patient No: ${p.PRMNT_PATIENT_NO}`;
 }
 
-export function PatientListScreen({ navigation, route }: RootScreenProps<'PatientList'>) {
+export function PatientListScreen({
+  navigation,
+  route,
+}: RootScreenProps<'PatientList'>) {
   const wardCd = route.params?.wardCd;
   const [user, setLocalUser] = useState<User | null>(null);
   const [patients, setPatients] = useState<PatientModel[]>([]);
@@ -110,11 +122,15 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
 
   function call(mobile?: string) {
     if (!mobile) return;
-    Linking.openURL(`tel:${mobile}`).catch(() => Alert.alert('Call', 'Unable to make call'));
+    Linking.openURL(`tel:${mobile}`).catch(() =>
+      Alert.alert('Call', 'Unable to make call'),
+    );
   }
   function sms(mobile?: string) {
     if (!mobile) return;
-    Linking.openURL(`sms:${mobile}`).catch(() => Alert.alert('SMS', 'Unable to send SMS'));
+    Linking.openURL(`sms:${mobile}`).catch(() =>
+      Alert.alert('SMS', 'Unable to send SMS'),
+    );
   }
   function whatsapp(mobile?: string) {
     if (!mobile) return;
@@ -140,8 +156,16 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
         centerTitle={true}
         onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
         right={
-          <TouchableOpacity style={styles.menuBtn} onPress={() => setShowTypeModal(true)} hitSlop={8}>
-            <Icon name="account-switch" size={22} color={colors.textOnPrimary} />
+          <TouchableOpacity
+            style={styles.menuBtn}
+            onPress={() => setShowTypeModal(true)}
+            hitSlop={8}
+          >
+            <Icon
+              name="account-switch"
+              size={22}
+              color={colors.textOnPrimary}
+            />
           </TouchableOpacity>
         }
       />
@@ -159,14 +183,27 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
       </View>
 
       <FlatList
+        style={styles.flatList}
         data={filtered}
         keyExtractor={item => item.PRMNT_PATIENT_NO}
-        contentContainerStyle={[styles.list, filtered.length === 0 && styles.emptyContainer]}
+        contentContainerStyle={[
+          styles.list,
+          filtered.length === 0 && styles.emptyContainer,
+        ]}
         ListEmptyComponent={
-          !loading ? <EmptyState icon="account-search-outline" title="No patients found" /> : undefined
+          !loading ? (
+            <EmptyState
+              icon="account-search-outline"
+              title="No patients found"
+            />
+          ) : undefined
         }
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => navigation.navigate('PatientDetail', { patient: item })}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('PatientDetail', { patient: item })
+            }
+          >
             <Card style={styles.card}>
               <View style={styles.row}>
                 <GenderAvatar gender={item.PATIENT_GENDER} size={44} />
@@ -175,24 +212,46 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                     {item.PATIENT_NAME}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
-                    {item.PATIENT_GENDER === 'M' ? 'Male' : 'Female'}, {simplifyAge(item.PATIENT_AGE)}
+                    {item.PATIENT_GENDER === 'M' ? 'Male' : 'Female'},{' '}
+                    {simplifyAge(item.PATIENT_AGE)}
                   </Text>
                   <Text style={styles.meta} numberOfLines={1}>
-                    Ward: {item.PATIENT_WARDNO} · Bed: {item.PATIENT_BEDNO} · Floor: {item.PATIENT_FLOOR}
+                    Ward: {item.PATIENT_WARDNO} · Bed: {item.PATIENT_BEDNO} ·
+                    Floor: {item.PATIENT_FLOOR}
                   </Text>
                   <View style={styles.contactLine}>
                     <Text style={styles.mobile} numberOfLines={1}>
                       {item.PATIENT_MOBILE}
                     </Text>
                     <View style={styles.contactIcons}>
-                      <TouchableOpacity style={styles.contactIconBtn} onPress={() => call(item.PATIENT_MOBILE)} hitSlop={8}>
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={() => call(item.PATIENT_MOBILE)}
+                        hitSlop={8}
+                      >
                         <Icon name="phone" size={18} color={colors.primary} />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.contactIconBtn} onPress={() => sms(item.PATIENT_MOBILE)} hitSlop={8}>
-                        <Icon name="message-text" size={18} color={colors.primary} />
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={() => sms(item.PATIENT_MOBILE)}
+                        hitSlop={8}
+                      >
+                        <Icon
+                          name="message-text"
+                          size={18}
+                          color={colors.primary}
+                        />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.contactIconBtn} onPress={() => whatsapp(item.PATIENT_MOBILE)} hitSlop={8}>
-                        <Icon name="whatsapp" size={18} color={colors.success} />
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={() => whatsapp(item.PATIENT_MOBILE)}
+                        hitSlop={8}
+                      >
+                        <Icon
+                          name="whatsapp"
+                          size={18}
+                          color={colors.success}
+                        />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -211,14 +270,38 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                           {item.DOC_MOBILENO}
                         </Text>
                         <View style={styles.contactIcons}>
-                          <TouchableOpacity style={styles.contactIconBtn} onPress={() => call(item.DOC_MOBILENO)} hitSlop={8}>
-                            <Icon name="phone" size={18} color={colors.primary} />
+                          <TouchableOpacity
+                            style={styles.contactIconBtn}
+                            onPress={() => call(item.DOC_MOBILENO)}
+                            hitSlop={8}
+                          >
+                            <Icon
+                              name="phone"
+                              size={18}
+                              color={colors.primary}
+                            />
                           </TouchableOpacity>
-                          <TouchableOpacity style={styles.contactIconBtn} onPress={() => sms(item.DOC_MOBILENO)} hitSlop={8}>
-                            <Icon name="message-text" size={18} color={colors.primary} />
+                          <TouchableOpacity
+                            style={styles.contactIconBtn}
+                            onPress={() => sms(item.DOC_MOBILENO)}
+                            hitSlop={8}
+                          >
+                            <Icon
+                              name="message-text"
+                              size={18}
+                              color={colors.primary}
+                            />
                           </TouchableOpacity>
-                          <TouchableOpacity style={styles.contactIconBtn} onPress={() => whatsapp(item.DOC_MOBILENO)} hitSlop={8}>
-                            <Icon name="whatsapp" size={18} color={colors.success} />
+                          <TouchableOpacity
+                            style={styles.contactIconBtn}
+                            onPress={() => whatsapp(item.DOC_MOBILENO)}
+                            hitSlop={8}
+                          >
+                            <Icon
+                              name="whatsapp"
+                              size={18}
+                              color={colors.success}
+                            />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -238,16 +321,26 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
           onPress={() => {
             setFilterKind(null);
             setFilterValue(null);
-          }}>
+          }}
+        >
           <Text style={styles.filterBtnLabel}>All</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setModalKind('class')}>
+        <TouchableOpacity
+          style={styles.filterBtn}
+          onPress={() => setModalKind('class')}
+        >
           <Text style={styles.filterBtnLabel}>Class</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setModalKind('ward')}>
+        <TouchableOpacity
+          style={styles.filterBtn}
+          onPress={() => setModalKind('ward')}
+        >
           <Text style={styles.filterBtnLabel}>Ward</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setModalKind('floor')}>
+        <TouchableOpacity
+          style={styles.filterBtn}
+          onPress={() => setModalKind('floor')}
+        >
           <Text style={styles.filterBtnLabel}>Floor</Text>
         </TouchableOpacity>
       </View>
@@ -256,29 +349,59 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
         visible={!!modalKind}
         transparent
         animationType="none"
-        onRequestClose={() => setModalKind(null)}>
+        // Without this, iOS can present the modal still laid out for
+        // portrait when the device is already rotated to landscape (a known
+        // RN Modal quirk) — this tells it every orientation is fine so it
+        // always matches the screen underneath.
+        supportedOrientations={[
+          'portrait',
+          'landscape-left',
+          'landscape-right',
+          'portrait-upside-down',
+        ]}
+        onRequestClose={() => setModalKind(null)}
+      >
         <TouchableOpacity
           style={styles.modalBackdrop}
           activeOpacity={1}
-          onPress={() => setModalKind(null)}>
+          onPress={() => setModalKind(null)}
+        >
           {/* activeOpacity={1} + no-op onPress: claims the touch so taps inside
               the box don't fall through to the backdrop's dismiss handler. */}
-          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalBox}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {}}
+            style={styles.modalBox}
+          >
             <View style={styles.modalHeaderRow}>
               <View style={styles.modalHeaderLeft}>
                 <View style={styles.modalIconBadge}>
-                  <Icon name={filterKindIcon(modalKind)} size={20} color={colors.primary} />
+                  <Icon
+                    name={filterKindIcon(modalKind)}
+                    size={20}
+                    color={colors.primary}
+                  />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>
-                    Filter by {modalKind === 'class' ? 'Class' : modalKind === 'ward' ? 'Ward' : 'Floor'}
+                    Filter by{' '}
+                    {modalKind === 'class'
+                      ? 'Class'
+                      : modalKind === 'ward'
+                      ? 'Ward'
+                      : 'Floor'}
                   </Text>
                   <Text style={styles.modalSubtitle}>
-                    {filterOptions.length} option{filterOptions.length === 1 ? '' : 's'} available
+                    {filterOptions.length} option
+                    {filterOptions.length === 1 ? '' : 's'} available
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => setModalKind(null)} hitSlop={8} style={styles.modalCloseBtn}>
+              <TouchableOpacity
+                onPress={() => setModalKind(null)}
+                hitSlop={8}
+                style={styles.modalCloseBtn}
+              >
                 <Icon name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -293,19 +416,28 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                 const selected = item === filterValue;
                 return (
                   <TouchableOpacity
-                    style={[styles.filterOptionRow, selected && styles.filterOptionRowSelected]}
+                    style={[
+                      styles.filterOptionRow,
+                      selected && styles.filterOptionRowSelected,
+                    ]}
                     activeOpacity={0.7}
                     onPress={() => {
                       setFilterKind(modalKind);
                       setFilterValue(item);
                       setModalKind(null);
-                    }}>
+                    }}
+                  >
                     <Icon
                       name={selected ? 'radiobox-marked' : 'radiobox-blank'}
                       size={20}
                       color={selected ? colors.primary : colors.textMuted}
                     />
-                    <Text style={[styles.filterOptionLabel, selected && styles.filterOptionLabelSelected]}>
+                    <Text
+                      style={[
+                        styles.filterOptionLabel,
+                        selected && styles.filterOptionLabelSelected,
+                      ]}
+                    >
                       {item}
                     </Text>
                   </TouchableOpacity>
@@ -319,8 +451,13 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
                 setFilterKind(null);
                 setFilterValue(null);
                 setModalKind(null);
-              }}>
-              <Icon name="filter-remove-outline" size={16} color={colors.primary} />
+              }}
+            >
+              <Icon
+                name="filter-remove-outline"
+                size={16}
+                color={colors.primary}
+              />
               <Text style={styles.modalClearBtnLabel}>Clear filter</Text>
             </TouchableOpacity>
           </TouchableOpacity>
@@ -339,8 +476,20 @@ export function PatientListScreen({ navigation, route }: RootScreenProps<'Patien
 
 const styles = StyleSheet.create({
   menuBtn: { padding: spacing.xs },
-  searchWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  searchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  // flexShrink: 0 so this bar keeps its own height/padding when vertical
+  // space is tight (e.g. landscape after auto-rotate) — the FlatList below
+  // has its own explicit flex: 1 so it (not this bar) absorbs the squeeze.
+  searchWrap: {
+    flexShrink: 0,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  flatList: { flex: 1 },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   searchFieldContainer: { flex: 1, marginBottom: 0, marginRight: spacing.sm },
   searchInput: { marginBottom: 0 },
   countText: {
@@ -349,9 +498,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  list: { padding: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl },
+  list: {
+    padding: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl,
+  },
   emptyContainer: { flexGrow: 1, justifyContent: 'center' },
-  card: { marginBottom: spacing.xs, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  card: {
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   info: { flex: 1 },
   name: { ...typography.bodyStrong, color: colors.textPrimary },
@@ -362,7 +519,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 2,
   },
-  mobile: { ...typography.captionStrong, color: colors.primary, flexShrink: 1, marginRight: spacing.sm },
+  mobile: {
+    ...typography.captionStrong,
+    color: colors.primary,
+    flexShrink: 1,
+    marginRight: spacing.sm,
+  },
   contactIcons: { flexDirection: 'row', gap: spacing.xs },
   contactIconBtn: {
     width: 28,
@@ -379,7 +541,11 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   doctorName: { ...typography.captionStrong, color: colors.textPrimary },
-  ptnNo: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs },
+  ptnNo: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
   filterBar: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
@@ -418,7 +584,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  modalHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
+  modalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flexShrink: 1,
+  },
   modalIconBadge: {
     width: 40,
     height: 40,
@@ -428,7 +599,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalTitle: { ...typography.h3, color: colors.textPrimary },
-  modalSubtitle: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
+  modalSubtitle: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
   modalCloseBtn: {
     width: 32,
     height: 32,
@@ -449,7 +624,10 @@ const styles = StyleSheet.create({
   },
   filterOptionRowSelected: { backgroundColor: colors.primaryLight },
   filterOptionLabel: { ...typography.body, color: colors.textPrimary },
-  filterOptionLabelSelected: { ...typography.bodyStrong, color: colors.primaryDark },
+  filterOptionLabelSelected: {
+    ...typography.bodyStrong,
+    color: colors.primaryDark,
+  },
   modalClearBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -460,5 +638,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  modalClearBtnLabel: { ...typography.bodyStrong, color: colors.primary, fontSize: 14 },
+  modalClearBtnLabel: {
+    ...typography.bodyStrong,
+    color: colors.primary,
+    fontSize: 14,
+  },
 });
